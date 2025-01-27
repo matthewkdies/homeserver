@@ -20,6 +20,20 @@ jobs:
           echo "Latest version: $VERSION"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
+      - name: Check if Release Already Exists
+        id: check_release
+        run: |
+          # List all releases and check if the version already exists
+          RELEASE_EXISTS=$(gh release list --repo $GITHUB_REPOSITORY | grep -w "${{ env.VERSION }}")
+          if [ -n "$RELEASE_EXISTS" ]; then
+            echo "Release ${{ env.VERSION }} already exists. Update the changelog."
+            exit 1
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        permissions:
+          contents: read
+
       - name: Create GitHub Release
         id: create_release
         run: |
@@ -27,3 +41,5 @@ jobs:
           gh release create ${{ env.VERSION }} --title "Release ${{ env.VERSION }}" --notes "Release notes for version ${{ env.VERSION }}" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        permissions:
+          contents: write
