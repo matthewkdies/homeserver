@@ -1,0 +1,57 @@
+# ------------------------------------------------------------------------
+# Authelia allows for local Single Sign-On (SSO) in supporting containers.
+# It's an open-source, self-hosted way to vastly improve the security of
+# other containers, especially those that need to/should have logins. Plus
+# it pairs really well with traefik, which I plan to add on in the future.
+#
+# Helpful links:
+#  - https://www.smarthomebeginner.com/authelia-docker-compose-guide-2024-v2/
+#  - https://www.authelia.com/configuration/prologue/introduction/ 
+# ------------------------------------------------------------------------
+
+# we're going to use secrets, to improve on the security. security by design!
+secrets:
+  authelia_jwt_secret:
+    file: ${SECRETS_DIR}/authelia_jwt_secret
+  authelia_session_secret:
+    file: ${SECRETS_DIR}/authelia_session_secret
+  authelia_storage_encryption_key:
+    file: ${SECRETS_DIR}/authelia_storage_encryption_key
+  authelia_notifier_smtp_password:
+    file: ${SECRETS_DIR}/authelia_notifier_smtp_password
+
+services:
+  authelia:
+    container_name: authelia
+    image: authelia/authelia:4.38.8
+    expose:
+      - 9091
+    volumes:
+      - ${DOCKER_DIR}/authelia:/config
+    environment:
+      - TZ=America/New_York
+      - PUID=128
+      - PGID=129
+      - AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE=/run/secrets/authelia_jwt_secret
+      - AUTHELIA_SESSION_SECRET_FILE=/run/secrets/authelia_session_secret
+      - AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE=/run/secrets/authelia_storage_encryption_key
+      - AUTHELIA_NOTIFIER_SMTP_USERNAME=${GMAIL} # SMTP
+      - AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE=/run/secrets/authelia_notifier_smtp_password # SMTP
+    secrets:
+      - authelia_jwt_secret
+      - authelia_storage_encryption_key
+      - authelia_session_secret
+      - authelia_notifier_smtp_password
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.2  # give it a static IP so we can create set vars elsewhere
+
+    restart: unless-stopped
+
+# TODO: set up Postgres database instead of SQLite
+
+networks:
+  webapps:
+    external: true
