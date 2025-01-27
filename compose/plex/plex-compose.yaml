@@ -1,0 +1,55 @@
+# ---------------------------------------------------------------------------------
+# "Plex organizes video, music and photos from personal media libraries and streams
+# them to smart TVs, streaming boxes and mobile devices. 
+# 
+# Notes:
+#  - I have the Plex Pass, opening me up to a wide range of "pro" features
+#    - One of these features: hardware transcoding -- I have an NVIDIA GPU for this
+#  - I use the RAM to do transcoding, since RAM is cheap and SSDs/HDDs are *not*
+#  - Runs on host network: this is by far the easiest setup, IMO
+# ---------------------------------------------------------------------------------
+
+secrets:
+  plex-claim-token:
+    file: ${SECRETS_DIR}/plex_claim_token
+
+services:
+  plex:
+    image: linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    deploy:  # need to use the GPU for hardware transcoding
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      - PUID=1028
+      - PGID=65536
+      - TZ=America/New_York
+      - VERSION=latest
+      - FILE__PLEX_CLAIM=/run/secrets/plex-claim-token  # retrieved from Plex to verify the Plex Pass
+      - NVIDIA_VISIBLE_DEVICES=all  # see "Nvidia" section here: https://hub.docker.com/r/linuxserver/plex
+      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+    secrets:
+      - plex-claim-token
+    healthcheck:
+      test: curl --connect-timeout 15 --silent --show-error --fail http://localhost:32400/identity
+      interval: 1m00s
+      timeout: 15s
+      retries: 3
+      start_period: 1m00s
+    volumes:
+      - plex_config:/config
+      - ${DATA_DIR}/media:/data/media
+      - ${DATA3_DIR}/media:/data3/media
+      - /dev/shm:/transcode  # use the RAM for transcoding, to save the SSD from wear and tear
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  plex_config:
+    external: true
