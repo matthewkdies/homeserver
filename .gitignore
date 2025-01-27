@@ -1,0 +1,10 @@
+docker
+**/congrats.md
+
+# I use a tool to detect secrets: https://github.com/Yelp/detect-secrets
+.secrets.baseline
+
+# other git repos
+compose/arr-suite/bazarr-subcleaner
+compose/football-pool/football-pool
+compose/mealie/mealie_source

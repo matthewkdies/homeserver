@@ -1,0 +1,17 @@
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/Yelp/detect-secrets
+    rev: v1.5.0
+    hooks:
+      - id: detect-secrets
+        args:
+          - --baseline
+          - .secrets.baseline
+          - --exclude-secrets
+          - docker/secrets
+          - --exclude-files
+          - mealie/mealie_source
+          - --exclude-files
+          - arr-suite/bazarr-subcleaner
+          - --exclude-files
+          - football-pool/migrations
