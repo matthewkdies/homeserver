@@ -51,5 +51,3 @@ jobs:
           gh release create ${{ env.VERSION }} --title "Release ${{ env.VERSION }}" --notes "Release notes for version ${{ env.VERSION }}" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        permissions:
-          contents: write
