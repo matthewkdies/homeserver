@@ -1,0 +1,39 @@
+# -------------------------------------------------------------------------------------
+# Actual is a self-hosted finance management service that allows tracking your finances
+# and communicating with different financial institutions through 'SimpleFIN Bridge'.
+# The setup below is painfully simple on a NAS, especially in my case; you can use env
+# vars to configure the web availability but this is handled for me instead by the NAS
+# built-in reverse proxy. See all options and more details at the below link.
+#  - https://actualbudget.org/docs/install/docker/
+#  - https://github.com/actualbudget/actual-server/blob/master/docker-compose.yml
+# -------------------------------------------------------------------------------------
+
+services:
+  actual_server:
+    image: docker.io/actualbudget/actual-server:latest
+    container_name: actual
+    expose:
+      - 5006
+    volumes:
+      - ${DOCKER_DIR}/actual:/data
+      - ${COMPOSE_DIR}/actual/healthcheck.js:/healthcheck.js
+    environment:
+      ACTUAL_LOGIN_METHOD: header
+      ACTUAL_TRUSTED_AUTH_PROXIES: 172.19.0.2
+    healthcheck:
+      test: node /healthcheck.js || exit 1
+      interval: 5m00s
+      timeout: 10s
+      retries: 2
+      start_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.4
+    restart: unless-stopped
+
+networks:
+  webapps:
+    external: true
+
