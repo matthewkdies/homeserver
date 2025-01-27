@@ -1,3 +1,8 @@
+# -------------------------------------------------------------------------
+# I have another repo where I made a website for my family's football pool.
+# This directory takes that website and hosts it here on my server!
+# -------------------------------------------------------------------------
+
 secrets:
   flask_secret_key:
     file: ${SECRETS_DIR}/football_pool_flask_secret_key

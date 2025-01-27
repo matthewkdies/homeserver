@@ -1,3 +1,12 @@
+# -----------------------------------------------------------------------
+# Caddy is a reverse proxy that "just works". I hear that thrown around a
+# lot, and it's never true. But it's *much* closer to being true with
+# Caddy. A lot of work went into getting this working, and there's some
+# further detail in the `adding_new_webapp.md` file in this repo. There's
+# also a bit of documentation in the config/Caddyfile. I use this
+# container to route traffic to all of the web-apps I host, it's great!
+# -----------------------------------------------------------------------
+
 secrets:
   actual_password:
     file: ${SECRETS_DIR}/caddy_actual_password
