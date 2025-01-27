@@ -28,7 +28,8 @@ jobs:
           # List all releases and check if the version already exists
           RELEASE_EXISTS=$(gh release list --repo $GITHUB_REPOSITORY | grep -w "${{ env.VERSION }}" || true)
           if [ -n "$RELEASE_EXISTS" ]; then
-            echo "Release ${{ env.VERSION }} already exists. Update the changelog."
+            echo "Release ${{ env.VERSION }} already exists."
+            echo "If this is intended to be a release, update the changelog and push again."
             exit 1
           fi
         env:
