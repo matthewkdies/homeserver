@@ -26,4 +26,4 @@ jobs:
           # Create a release with the extracted version number
           gh release create ${{ env.VERSION }} --title "Release ${{ env.VERSION }}" --notes "Release notes for version ${{ env.VERSION }}" --generate-notes
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
