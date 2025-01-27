@@ -1,0 +1,119 @@
+# ----------------------------------------------------------------------------------------
+# Mealie is an intuitive and easy to use recipe management app!
+# It allows easily importing recipes into the app from various web sources and OCR.
+# Furthermore, the recipes can be added to a meal plan and then exported directly
+# to shopping lists, which has become my #1 method for meal planning and grocery shopping.
+# It also has a fairly well-maintained PWA, which makes mobile usage well-integrated.
+# 
+# A note on some of the interesting stuff below: at the time of writing this, Mealie has
+# not yet fully supported Docker secrets. I want to use them more than they currently 
+# support, so I've written a custom entrypoint script to set environment variables from
+# these secret files. This explains the (1) custom entrypoint and the (2) mounted file.
+# ----------------------------------------------------------------------------------------
+
+secrets:
+  BASE_URL:
+    file: ${SECRETS_DIR}/mealie_base_url
+  POSTGRES_USER:
+    file: ${SECRETS_DIR}/mealie_postgres_user
+  POSTGRES_PASSWORD:
+    file: ${SECRETS_DIR}/mealie_postgres_password
+  SMTP_PASSWORD:
+    file: ${SECRETS_DIR}/mealie_gmail_password
+
+services:
+  mealie:
+    # mealie advises against using the latest tag
+    # however, I like new features/bug fixes and I know how to debug
+    # image: ghcr.io/mealie-recipes/mealie:latest
+    build:
+      # there's a bug that causes the PWA theme-color to not be respected:
+      # https://github.com/mealie-recipes/mealie/issues/4563
+      # in order to resolve it, I build my own custom image to use (until it's resolved)
+      context: ${COMPOSE_DIR}/mealie/mealie_source
+      dockerfile: ${COMPOSE_DIR}/mealie/mealie_source/custom.dockerfile
+    container_name: mealie
+    entrypoint: [ "/app/docker-entrypoint.sh", "/app/run.sh" ]
+    image: mealie-pwa-theme-fix:2.5.0
+    hostname: mealie
+    # "Setting an explicit memory limit is recommended ... will improve idle performance"
+    mem_limit: 4g
+    cpu_shares: 1024
+    read_only: false
+    expose:
+      - 9000
+    depends_on:
+      mealie-postgres-db:
+        condition: service_healthy
+    volumes:
+      - mealie_data:/app/data/:rw
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/app/docker-entrypoint.sh
+    environment:
+      ALLOW_SIGNUP: false # prevents uninvited signup
+      PUID: 123
+      PGID: 124
+      TZ: America/New_York
+      # database settings
+      DB_ENGINE: postgres
+      POSTGRES_SERVER: mealie-postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: mealie
+      # email/SMTP settings
+      SMTP_HOST: smtp.gmail.com
+      SMTP_PORT: 587
+      SMTP_FROM_NAME: mealie
+      SMTP_AUTH_STRATEGY: TLS
+      SMTP_FROM_EMAIL: ${GMAIL}
+      SMTP_USER: ${GMAIL}
+      # visual settings
+      THEME_LIGHT_PRIMARY: "#525E3C"
+      THEME_DARK_PRIMARY: "#525E3C"
+    secrets:
+      - BASE_URL
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - SMTP_PASSWORD
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.6
+      mealie_network:
+    restart: unless-stopped
+
+  mealie-postgres-db:
+    image: postgres:17
+    container_name: mealie-postgres
+    hostname: mealie-postgres
+    mem_limit: 1g
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "/pg_healthcheck.sh"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    volumes:
+      - mealie_postgres:/var/lib/postgresql/data:rw
+      - ${COMPOSE_DIR}/mealie/pg_healthcheck.sh:/pg_healthcheck.sh
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+    environment:
+      POSTGRES_DB: mealie
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
+    networks:
+      - mealie_network
+    restart: unless-stopped
+
+volumes:
+  mealie_data:
+  mealie_postgres:
+
+networks:
+  webapps:
+    external: true
+  mealie_network:
+    driver: bridge
