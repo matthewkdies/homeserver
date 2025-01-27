@@ -30,13 +30,15 @@ jobs:
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "Release ${{ env.VERSION }} already exists."
             echo "If this is intended to be a release, update the changelog and push again."
-            exit 1
+            echo "RELEASE_EXISTS=true" >> $GITHUB_ENV
+            exit 0
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
         id: create_release
+        if: ${{ env.RELEASE_EXISTS != 'true' }}
         run: |
           # Create a release with the extracted version number
           gh release create ${{ env.VERSION }} --title "Release ${{ env.VERSION }}" --notes "Release notes for version ${{ env.VERSION }}" --generate-notes
