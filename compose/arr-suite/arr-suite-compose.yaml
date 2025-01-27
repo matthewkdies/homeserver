@@ -1,0 +1,381 @@
+# ----------------------------------------------------------------------------------------
+# The below containers all serve to supplement and automate a lot of Plex management.
+# For this reason, the Plex compose is kept separate, so that changes to these services
+# won't affect the availability of Plex itself. 
+# 
+# The current capabilities of this stack:
+#   1. Handling Plex users' content requests (overseerr)
+#   2. Creation of a VPN container that uses my Mullvad account (gluetun)
+#   3. Usage of VPN container to torrent **LEGAL CONTENT ONLY!** (qbittorrent)
+#   4. Automated management of handling connections to torrent clients (prowlarr)
+#       - Proxy container for bypassing some Cloudflare protections (flaresolverr)
+#   5. Automated media importing, renaming, management, and upgrading for
+#       - TV shows (sonarr)
+#       - movies (radarr)
+#       - music (lidarr)
+#   6. Automated fetching of subtitles for media (bazarr)
+#   7. Transcoding of video media to meet custom-set specifications (tdarr)
+#   8. Plex activity monitoring (tautilli)
+# 
+# Unfortunately, I haven't been great at keeping helpful links as I go so far.
+# Those that I remember off the top of my head are listed below:
+#   - https://trash-guides.info/: Helpful guides for configuring media management clients
+#   - https://drfrankenstein.co.uk/: Basically my source of truth for configuring this all
+#   - https://github.com/qdm12/gluetun/discussions/805#discussioncomment-2026642: getting
+#     the VPN working requires setting the `WIREGUARD_ADDRESSES` and
+#     `WIREGUARD_PRIVATE_KEY` variables, here's a comment on how to do so
+# ----------------------------------------------------------------------------------------
+
+# TODO: All of this
+name: arr-suite
+
+secrets:
+  wireguard-private-key:
+    file: ${SECRETS_DIR}/gluetun_wireguard_private_key
+  wireguard-addresses:
+    file: ${SECRETS_DIR}/gluetun_wireguard_addresses
+
+services:
+  # tv show monitoring + management
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+    hostname: sonarr
+    environment:
+      - PUID=133
+      - PGID=65536
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:8989/api/v3/health?apikey=${SONARR_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - sonarr_config:/config
+      - ${DATA_DIR}:/data
+      - ${DATA3_DIR}:/data3
+    expose:
+      - 8989
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.9  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # movie monitoring + management
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+    hostname: radarr
+    environment:
+      - PUID=136
+      - PGID=65536
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:7878/api/v3/health?apikey=${RADARR_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - radarr_config:/config
+      - ${DATA_DIR}:/data
+      - ${DATA3_DIR}:/data3
+    expose:
+      - 7878
+    networks: 
+      webapps:
+        ipv4_address: 172.19.0.8  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+  
+  # music monitoring + management
+  lidarr:
+    image: linuxserver/lidarr:latest
+    container_name: lidarr
+    hostname: lidarr
+    environment:
+      - PUID=137
+      - PGID=65536
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:8686/api/v1/health?apikey=${LIDARR_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - lidarr_config:/config
+      - ${DATA_DIR}:/data
+      - ${DATA3_DIR}:/data3
+    expose:
+      - 8686
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.12  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # torrent client monitoring + management
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+    hostname: prowlarr
+    environment:
+      - PUID=138
+      - PGID=133
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:9696/api/v1/health?apikey=${PROWLARR_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - prowlarr_config:/config
+    expose:
+      - 9696
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.10  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # subtitle monitoring + management
+  bazarr:
+    image: linuxserver/bazarr:latest
+    container_name: bazarr
+    hostname: bazarr
+    environment:
+      - PUID=139
+      - PGID=65536
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:6767/api/system/status?apikey=${BAZARR_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - bazarr_config:/config
+      - ${DATA_DIR}:/data
+      - ${DATA3_DIR}:/data3
+      - ${COMPOSE_DIR}/arr-suite/bazarr-subcleaner:/subcleaner
+    expose:
+      - 6767
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.11  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # content request monitoring + management
+  overseerr:
+    image: linuxserver/overseerr
+    container_name: overseerr
+    hostname: overseerr
+    environment:
+      - PUID=140
+      - PGID=136
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:5055/api/v1/status || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - overseerr_config:/config
+    expose:
+      - 5055
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.7  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # transcoding of video files
+  tdarr:
+    image: ghcr.io/haveagitgat/tdarr:latest
+    container_name: tdarr
+    hostname: tdarr
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.13  # static IP for in-app config
+    # healthcheck:
+    #   test: wget --no-verbose --tries=1 --spider http://localhost:8265/ || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    expose:
+      - 8265
+      - 8266
+    environment:
+      - TZ=America/New_York
+      - PUID=141
+      - PGID=65536
+      - serverIP=0.0.0.0
+      - serverPort=8266
+      - webUIPort=8265
+      - internalNode=true
+      - inContainer=true
+      - nodeID=InternalNode
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+    volumes:
+      - tdarr_config:/app
+      - ${DATA_DIR}/media:/media
+      - ${DATA3_DIR}/media:/media3
+      - ${DOCKER_DIR}/tdarr/transcode:/transcode
+    devices:
+      - /dev/dri:/dev/dri
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # helps to bypass Cloudflare protection used by many indexers
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    hostname: flaresolverr
+    environment:
+      - TZ=America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:8191 || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 60s
+    expose:
+      - 8191
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.14  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # VPN client container
+  gluetun:
+    image: qmcgaw/gluetun:v3
+    container_name: gluetun
+    hostname: gluetun
+    cap_add:
+      - NET_ADMIN
+    expose:
+      # since gluetun acts as a network, everything that runs on it needs exposed here
+      # so in order to expose apps on the VPN to the internet, we need to expose ports here
+      - 8090 # qbittorrent
+    ports:
+      - 8888:8888/tcp # HTTP proxy (tunnels HTTP and HTTPS through TCP)
+      - 8388:8388/tcp # Shadowsocks proxy server (protocol based on SOCKS5 with an encryption layer, tunnels TCP+UDP)
+      - 8388:8388/udp # Shadowsocks proxy server (protocol based on SOCKS5 with an encryption layer, tunnels TCP+UDP)
+    volumes:
+      - gluetun_config:/gluetun
+    environment:
+      - PUID=132
+      - PGID=132
+      - VPN_SERVICE_PROVIDER=mullvad
+      - VPN_TYPE=wireguard
+      - WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/secrets/wireguard-private-key
+      - WIREGUARD_ADDRESSES_SECRETFILE=/run/secrets/wireguard-addresses
+      - SERVER_CITIES=Zurich
+      - SERVER_COUNTRIES=Switzerland
+      - TZ=America/New_York
+      - HTTPPROXY=off
+      - SHADOWSOCKS=off
+      - FIREWALL_OUTBOUND_SUBNETS=172.19.0.0/16,192.168.1.0/24
+      - UPDATER_PERIOD=24h
+    secrets:
+      - wireguard-private-key
+      - wireguard-addresses
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.15  # static IP for in-app config
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    labels:
+      - com.centurylinklabs.watchtower.enable=false  # manually update, so that network is up
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # torrenting client
+  qbittorrent:
+    image: linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=142
+      - PGID=65536
+      - TZ=America/New_York
+      - WEBUI_PORT=8090
+      - DOCKER_MODS=ghcr.io/gabe565/linuxserver-mod-vuetorrent  # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
+    # healthcheck:
+    #   test: >
+    #     curl -i --header 'Referer: http://localhost:8090' --data 'username=${QBITTORRENT_USERNAME}&password=${QBITTORRENT_PASSWORD}' http://localhost:8090/api/v2/auth/login || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 120s
+    volumes:
+      - qbittorrent_config:/config
+      - ${DATA_DIR}/torrents:/data/torrents
+      - ${DATA3_DIR}/torrents:/data3/torrents
+    network_mode: service:gluetun # run on the vpn network from above gluetun container
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # monitoring dashboard
+  tautulli:
+    image: linuxserver/tautulli:latest
+    container_name: tautulli
+    environment:
+      - PUID=143
+      - PGID=137
+      - TZ=America/New_York
+    volumes:
+      - tautulli_config:/config
+    expose:
+      - 8181
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.16  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  sonarr_config:
+  radarr_config:
+  lidarr_config:
+  prowlarr_config:
+  bazarr_config:
+  overseerr_config:
+  tdarr_config:
+  gluetun_config:
+  qbittorrent_config:
+  tautulli_config:
+
+networks:
+  webapps:
+    external: true
+    
