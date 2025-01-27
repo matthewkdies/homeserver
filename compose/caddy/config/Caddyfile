@@ -1,0 +1,232 @@
+# File structure: https://caddyserver.com/docs/caddyfile/concepts#structure
+# -------------------
+
+# Global Options
+{
+	# debug
+	servers {
+		trusted_proxies cloudflare {
+			interval 12h
+			timeout 15s
+		}
+	}
+	dynamic_dns {
+		provider cloudflare {env.CLOUDFLARE_API_TOKEN}
+		domains {
+			mattdies.com www
+		}
+		versions ipv4
+		dynamic_domains
+	}
+}
+
+# --------------------
+
+# Snippets
+(use_authelia) {
+	forward_auth authelia:9091 {
+		uri /api/authz/forward-auth
+		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+	}
+}
+
+(local_network_only) {
+	@external not remote_ip 192.168.1.0/24
+	respond @external 403
+}
+
+(cloudflare_dns) {
+	tls {
+        dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+    }
+}
+
+(log_for_app) {
+	log {
+		output file /var/log/caddy/{args[0]}.log
+	}
+}
+
+# https://github.com/mholt/caddy-ratelimit?tab=readme-ov-file#examples
+(rate_limit_api) {
+	rate_limit {
+		distributed
+		zone api_zone {
+			match {
+				path "/api/*"
+			}
+			key    {remote_host}  # Use the client's IP address as the key
+			window  5s            # Rate limiting window (default is 1 minute)
+			events  200            # Allow up to 10 requests per window
+		}
+		log_key
+	}
+}
+
+# -------------------
+
+# Serve Apps
+
+# authelia
+auth.mattdies.com {
+	import local_network_only
+	import cloudflare_dns
+	import log_for_app "authelia"
+	reverse_proxy authelia:9091
+}
+
+# mealie
+mealie.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "mealie"
+ 	import rate_limit_api
+	reverse_proxy mealie:9000
+}
+
+# actual
+actual.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "actual"
+	reverse_proxy actual:5006 {
+		header_up x-actual-password {env.ACTUAL_PASSWORD}
+	}
+}
+
+# plex
+plex.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "plex"
+	reverse_proxy 192.168.1.102:32400
+}
+
+# sonarr
+sonarr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "sonarr"
+	reverse_proxy sonarr:8989
+}
+
+# radarr
+radarr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "radarr"
+	reverse_proxy radarr:7878
+}
+
+# lidarr
+lidarr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "lidarr"
+	reverse_proxy lidarr:8686
+}
+
+# prowlarr
+prowlarr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "prowlarr"
+	reverse_proxy prowlarr:9696
+}
+
+# bazarr
+bazarr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "bazarr"
+	reverse_proxy bazarr:6767
+}
+
+# overseerr
+overseerr.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "overseerr"
+	reverse_proxy overseerr:5055
+}
+
+# tdarr
+tdarr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "tdarr"
+	reverse_proxy tdarr:8265
+}
+
+# vuetorrent
+vuetorrent.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "vuetorrent"
+	reverse_proxy gluetun:8090
+}
+
+# tautulli
+tautulli.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "tautulli"
+	reverse_proxy tautulli:8181
+}
+
+# pihole-nas
+pihole-nas.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "pihole-nas"
+	reverse_proxy 192.168.1.100:8001
+	rewrite / /admin
+}
+
+# pihole-pi
+pihole-pi.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "pihole-pi"
+	reverse_proxy 192.168.1.35:8000
+	rewrite / /admin
+}
+
+# nas
+nas.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "nas"
+	reverse_proxy 192.168.1.100:50362 {
+		transport http {
+			tls
+			tls_insecure_skip_verify
+		}
+	}
+}
+
+# router
+router.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "router"
+	reverse_proxy 192.168.1.1:7891 {
+		transport http {
+			tls
+			tls_insecure_skip_verify
+		}
+	}
+}
+
+# footballpool
+footballpool.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "footballpool"
+	reverse_proxy football-pool:5600
+}

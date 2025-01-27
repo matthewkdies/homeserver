@@ -1,0 +1,45 @@
+secrets:
+  actual_password:
+    file: ${SECRETS_DIR}/caddy_actual_password
+  cloudflare_api_token:
+    file: ${SECRETS_DIR}/caddy_cloudflare_api_token
+
+services:
+  caddy:
+    build:
+      context: ${DOCUMENTS_DIR}
+      dockerfile: ${COMPOSE_DIR}/caddy/Dockerfile
+    container_name: caddy
+    entrypoint: [ "/docker-entrypoint.sh", "caddy", "run", "--config", "/etc/caddy/Caddyfile" ]
+    image: caddy-custom-alpine:latest
+    labels:  # watchtower can't build images, so we'll build it with a script
+      - "com.centurylinklabs.watchtower.enable=false"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      # don't mount the Caddyfile directly:
+      # https://github.com/caddyserver/caddy/issues/5735#issuecomment-1675896585
+      - ${COMPOSE_DIR}/caddy/config:/etc/caddy
+      - ${DOCKER_DIR}/caddy/site:/srv
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh
+      - caddy_data:/data
+      - caddy_config:/config
+    secrets:
+      - actual_password
+      - cloudflare_api_token
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.3  # give it a static IP so we can create firewall rules
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+
+networks:
+  webapps:
+    external: true
