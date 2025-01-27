@@ -6,13 +6,19 @@ on:
       - main
 
 jobs:
-  publish-release:
+  checkout:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         id: checkout
         uses: actions/checkout@v2
 
+  prep-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    needs: checkout
+    steps:
       - name: Extract Latest Version from Changelog
         id: extract_version
         run: |
@@ -31,9 +37,13 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        permissions:
-          contents: read
 
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: prep-release
+    steps:
       - name: Create GitHub Release
         id: create_release
         run: |
