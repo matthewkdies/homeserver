@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+### Added
+- `README.md` files to the compose and scripts directories.
+
+### Changed
+- Watchtower was set to ignore Mealie while I wait on [a bug](https://github.com/mealie-recipes/mealie/issues/4563) to be fixed.
+- Added the `~/.docker/config.json` into the Watchtower container via a mounted volume to give it authorization to pull from a private registry.
+- The GitHub workflow now succeeds even if a release for the current version already exists, but skips making a new release.
+
+
 ## [0.1.0] - 2025/01/26
 ### Added
 - Adding the Docker Compose files, other configuration files, and healthcheck scripts that stand up my home server.
