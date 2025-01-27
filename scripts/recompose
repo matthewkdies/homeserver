@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+compose_file="$1"
+echo "Re-composing stack located at ${compose_file}."
+
+docker compose --file "${compose_file}" down
+docker compose --file "${compose_file}" up --detach

@@ -1,0 +1,43 @@
+#!/usr/bin/bash
+
+# ensure that the script is being called with the user name as an argument
+if [ -z "$1" ]; then
+  echo "Error: No username provided."
+  echo "Usage: $0 <username>"
+  exit 1
+fi
+
+USER_NAME="$1"
+APP_DIR="${DOCKER_DIR}"/"${USER_NAME}"
+
+# create the system user and group if they don't exist
+if ! id -u "${USER_NAME}" &>/dev/null; then
+  echo "Creating user ${USER_NAME}..."
+  sudo adduser --system --no-create-home --group "${USER_NAME}"
+else
+  echo "User ${USER_NAME} already exists."
+fi
+
+# Add the current user to the new group (if not already a member)
+if ! groups "$(whoami)" | grep -q "\b${USER_NAME}\b"; then
+  echo "Adding current user to the ${USER_NAME} group..."
+  sudo usermod -aG "${USER_NAME}" "$(whoami)"
+fi
+
+# Create the app directory if it doesn't exist
+if [ ! -d "${APP_DIR}" ]; then
+  echo "Creating directory ${APP_DIR}..."
+  sudo mkdir -p "$APP_DIR"
+else
+  echo "Directory ${APP_DIR} already exists."
+fi
+
+# Change ownership of the app directory to the user and group
+echo "Changing ownership of ${APP_DIR}..."
+sudo chown -R "${USER_NAME}":"${USER_NAME}" "${APP_DIR}"
+
+# Set permissions for the directory and its contents
+echo "Setting permissions on ${APP_DIR}..."
+sudo chmod -R 770 "${APP_DIR}"
+
+echo "Setup complete for user ${USER_NAME}."
