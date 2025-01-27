@@ -8,15 +8,13 @@ on:
 jobs:
   make-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout repository
         id: checkout
         uses: actions/checkout@v2
 
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
       - name: Extract Latest Version from Changelog
         id: extract_version
         run: |
