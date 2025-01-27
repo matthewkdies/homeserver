@@ -35,6 +35,8 @@ services:
     container_name: mealie
     entrypoint: [ "/app/docker-entrypoint.sh", "/app/run.sh" ]
     image: mealie-pwa-theme-fix:2.5.0
+    labels:  # watchtower can't build images, so we'll ignore it
+      - "com.centurylinklabs.watchtower.enable=false"  # TODO: remove when issue is resolved
     hostname: mealie
     # "Setting an explicit memory limit is recommended ... will improve idle performance"
     mem_limit: 4g
