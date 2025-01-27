@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  update-version-badge:
+  publish-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -25,3 +25,5 @@ jobs:
         run: |
           # Create a release with the extracted version number
           gh release create ${{ env.VERSION }} --title "Release ${{ env.VERSION }}" --notes "Release notes for version ${{ env.VERSION }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
