@@ -13,11 +13,9 @@ jobs:
         id: checkout
         uses: actions/checkout@v2
 
-  prep-release:
+  make-release:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    needs: checkout
+    permissions: read/write
     steps:
       - name: Extract Latest Version from Changelog
         id: extract_version
@@ -38,12 +36,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  create-release:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    needs: prep-release
-    steps:
       - name: Create GitHub Release
         id: create_release
         run: |
