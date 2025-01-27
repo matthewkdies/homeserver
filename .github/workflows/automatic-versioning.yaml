@@ -1,0 +1,27 @@
+name: Automatic Versioning
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  update-version-badge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        id: checkout
+        uses: actions/checkout@v2
+
+      - name: Extract Latest Version from Changelog
+        id: extract_version
+        run: |
+          VERSION=$(grep -oP '## \[\K[0-9]+\.[0-9]+\.[0-9]+' changelog.md | head -n 1)
+          echo "Latest version: $VERSION"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        id: create_release
+        run: |
+          # Create a release with the extracted version number
+          gh release create ${{ env.VERSION }} --title "Release ${{ env.VERSION }}" --notes "Release notes for version ${{ env.VERSION }}" --generate-notes
