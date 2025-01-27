@@ -1,0 +1,55 @@
+# --------------------------------------------------------------------------
+# Watchtower is awesome. It allows automatically updating Docker containers,
+# even itself. It's configured to run once daily at 3AM here.
+# --------------------------------------------------------------------------
+
+secrets:
+  gmail_password: # https://myaccount.google.com/apppasswords
+    file: ${SECRETS_DIR}/watchtower_gmail_password
+
+services:
+  # use docker-socket-proxy for watchtower's Docker access
+  watchtower-socket-proxy:
+    container_name: watchtower-socket-proxy
+    image: tecnativa/docker-socket-proxy
+    restart: unless-stopped
+    privileged: true
+    expose:
+      - 2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      - LOG_LEVEL=info
+      - POST=1
+      - CONTAINERS=1
+      - IMAGES=1
+      - NETWORKS=1
+      - VOLUMES=1
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - "com.centurylinklabs.watchtower.monitor-only=true"
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    depends_on:
+      - watchtower-socket-proxy
+    environment:
+      - DOCKER_HOST=tcp://watchtower-socket-proxy:2375
+      - TZ=America/New_York
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_STOPPED=true # update stopped containers
+      - WATCHTOWER_REVIVE_STOPPED=false # but don't start them after
+      - WATCHTOWER_SCHEDULE=0 0 3 * * * # daily at 3:00:00 AM
+      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${GMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${GMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=smtp.gmail.com
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT=587
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${GMAIL}
+      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=/run/secrets/gmail_password
+      - WATCHTOWER_NOTIFICATION_EMAIL_DELAY=30
+      - WATCHTOWER_NOTIFICATIONS=email
+    secrets:
+      - gmail_password
+    restart: unless-stopped
