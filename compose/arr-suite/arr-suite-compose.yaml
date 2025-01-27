@@ -26,7 +26,7 @@
 #     `WIREGUARD_PRIVATE_KEY` variables, here's a comment on how to do so
 # ----------------------------------------------------------------------------------------
 
-# TODO: All of this
+# TODO: Add API keys to secrets for healthchecks
 name: arr-suite
 
 secrets:
