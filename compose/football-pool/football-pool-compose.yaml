@@ -1,0 +1,63 @@
+secrets:
+  flask_secret_key:
+    file: ${SECRETS_DIR}/football_pool_flask_secret_key
+  db_user:
+    file: ${SECRETS_DIR}/football_pool_db_user
+  db_pass:
+    file: ${SECRETS_DIR}/football_pool_db_password
+
+services:
+  football-pool:
+    image: matthewkdies/football-pool:latest
+    container_name: football-pool
+    hostname: football-pool
+    expose:
+      - 5600
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.5
+      football-pool:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5600/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    secrets:
+      - flask_secret_key
+      - db_user
+      - db_pass
+    restart: unless-stopped
+
+  football-pool-db:
+    image: postgres:17
+    container_name: football-pool-postgres
+    hostname: football-pool-postgres
+    mem_limit: 1g
+    cpu_shares: 768
+    healthcheck:
+      test: ["CMD", "sh", "-c", "pg_isready -q -d football-pool -U $(cat /run/secrets/db_user)"]
+      timeout: 45s
+      interval: 10s
+      retries: 10
+    volumes:
+      - football-pool-data:/var/lib/postgresql/data:rw
+    secrets:
+      - db_user
+      - db_pass
+    environment:
+      POSTGRES_DB: football-pool
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_pass
+    networks: 
+      - football-pool
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+networks:
+  webapps:
+    external: true
+  football-pool:
+
+volumes:
+  football-pool-data:
