@@ -15,7 +15,7 @@ jobs:
 
   make-release:
     runs-on: ubuntu-latest
-    permissions: read/write
+    permissions: write
     steps:
       - name: Extract Latest Version from Changelog
         id: extract_version
