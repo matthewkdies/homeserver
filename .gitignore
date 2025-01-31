@@ -1,5 +1,9 @@
 docker
+fail2ban
 **/congrats.md
+
+# ah, VSCode
+.vscode/settings.json
 
 # I use a tool to detect secrets: https://github.com/Yelp/detect-secrets
 .secrets.baseline
