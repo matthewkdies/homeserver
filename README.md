@@ -5,7 +5,6 @@
 ![Issues](https://img.shields.io/github/issues/matthewkdies/homeserver)
 ![Pull Requests](https://img.shields.io/github/issues-pr/matthewkdies/homeserver)
 ![Docker Compose Version](https://img.shields.io/badge/Docker%20Compose-v2-blue)
-![Home Assistant Compatibility](https://img.shields.io/badge/Home%20Assistant-Compatible-blue)
 ![Secrets Scan](https://img.shields.io/badge/Secrets%20Scan-Passing-brightgreen)
 
 # Installation
@@ -22,6 +21,10 @@ git clone git@github.com:matthewkdies/homeserver.git
 # https
 git clone https://github.com/matthewkdies/homeserver.git
 ```
+
+# Prerequisites
+
+Docker and Docker Compose must be available.
 
 # Setup
 
@@ -44,6 +47,14 @@ if [ -f ~/.envvars ]; then
     . ~/.envvars
 fi
 ```
+
+# Running
+
+In order to run any of the files to start the included containers, I make the following assumptions:
+1. You have a working knowledge of [Docker Compose](https://docs.docker.com/reference/compose-file/).
+2. You will be able to interpret the files to see what you need to change to fit your specific setup. For example, changing the paths of secrets files or the values of environment variables.
+
+Beyond that, starting a stack is as simple as `docker compose --file <path_to_file> up --detach`.
 
 # Basic Structure
 
