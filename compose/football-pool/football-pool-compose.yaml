@@ -16,6 +16,8 @@ services:
     image: matthewkdies/football-pool:latest
     container_name: football-pool
     hostname: football-pool
+    labels:  # this is my own image, I'll know when I push and then pull it on my own
+      - "com.centurylinklabs.watchtower.enable=false"
     expose:
       - 5600
     networks:
