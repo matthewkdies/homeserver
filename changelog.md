@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - The `compose/football-pool/Dockerfile`, as I build the image elsewhere.
+- The `~/.docker/config.json` volume mount from Watchtower, as no private registries are needed.
 
 
 ## [0.1.0] - 2025/01/26
