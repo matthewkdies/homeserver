@@ -1,0 +1,24 @@
+secrets:
+  pihole-webpassword:
+    file: ${HOME}/docker/secrets/pihole_webpassword
+
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: pihole-pi
+    secrets:
+      - pihole-webpassword
+    environment:
+      PIHOLE_UID: 115
+      PIHOLE_GID: 124
+      TZ: America/New_York
+      WEBPASSWORD_FILE: /run/secrets/pihole-webpassword
+      DNSMASQ_LISTENING: local
+      WEB_PORT: 8000
+      DNSMASQ_USER: pihole
+    volumes:
+      - ${HOME}/docker/etc-pihole:/etc/pihole
+      - ${HOME}/docker/etc-dnsmasq.d:/etc/dnsmasq.d
+    network_mode: host
+    restart: unless-stopped
