@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- Compose files and custom configuration files for my local Pi-hole DNS'.
+- Compose file for my Minecraft server.
+- Compose file and custom configuration files for my local Pi-hole DNS'.
+  - Route all local traffic over IPv4 only.
+  - Create local SRV record for Minecraft server.
 - `README.md` files to the compose and scripts directories.
 
 ### Changed

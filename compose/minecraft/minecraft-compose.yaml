@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------------------------------
+# We all love Minecraft! Moira and I both have Java edition so I only host that version.
+# This was fairly hard to get working, surprisingly. It also requires maintenance when 
+# Minecraft needs updated, as the container won't start if it's been too long since an
+# update. 
+# 
+# Notes:
+#  - `JVM_XX_OPTS`: set to optimize the server for running specifically on a Synology NAS
+#  - changing difficulty, whitelist, etc. sometimes requires change here + `exec` -> CLI
+#  - the guide for *local* MC help: `/Users/mattdies/Documents/Gaming/Minecraft/help.txt`
+# ---------------------------------------------------------------------------------------
+
+services:
+  spigotserver:
+    image: itzg/minecraft-server:latest
+    container_name: minecraft
+    hostname: minecraft
+    environment:
+      - UID=144
+      - GID=138
+      - EULA=TRUE
+      - MEMORY=2G
+      - TYPE=PAPER
+      - VERSION=1.20.4  # this will need updated occasionally
+      - LEVEL=test_world_me_n_moira_TEST2  # I clearly had a great time here once
+      - SERVER_PORT=25565 # leave me! must be the port used
+      - ONLINE_MODE=TRUE
+      - DIFFICULTY=normal
+      - SERVER_NAME=Dead Matt's Servah
+      - WHITELIST=somenights,matthewkdies  # manually whitelist the allowed usernames
+      - EXISTING_WHITELIST_FILE=SYNCHRONIZE  # set to sync changes from above into file
+    volumes:
+      - minecraft_data:/data:rw
+    ports:
+      - 25565:25565
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  minecraft_data:
+
+networks:
+  webapps:
+    external: true
