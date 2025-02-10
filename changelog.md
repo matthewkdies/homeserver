@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Compose files and custom configuration files for my local Pi-hole DNS'.
 - `README.md` files to the compose and scripts directories.
 
 ### Changed
+- Added the `minecraft` subdomain to the dynamic DNS in Caddy, as I manually maintain a SRV record for Minecraft.
 - Watchtower was set to ignore the football pool container in favor of manual management, since I create it myself.
 - Watchtower was set to ignore Mealie while I wait on [a bug](https://github.com/mealie-recipes/mealie/issues/4563) to be fixed.
 - The GitHub workflow now succeeds even if a release for the current version already exists, but skips making a new release.
