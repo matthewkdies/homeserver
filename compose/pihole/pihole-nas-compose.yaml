@@ -1,0 +1,47 @@
+# ------------------------------------------------------------------------------------
+# Pi-Hole is an ad-blocking DNS sinkhole that runs to block ads for connected devices.
+# I run it in bridge mode, but it can also be run on host network and via macvlan.
+# Bridge is the best of both worlds for me because it can be set up with reverse proxy
+# and easily run on the entire network seamlessly. It should be noted that bridge mode
+# means that it *necessarily* blocks across the entire network, so if there are
+# incorrect blockers then Pi-Hole will have to be temporarily disabled or whitelisted.
+# ------------------------------------------------------------------------------------
+
+secrets:
+  pihole-webpassword:
+    file: /volume1/docker/secrets/pihole_webpassword
+
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    hostname: pihole-nas
+    secrets:
+      - pihole-webpassword
+    environment:
+      - PIHOLE_UID=1028
+      - PIHOLE_GID=65536
+      - TZ=America/New_York
+      - WEBPASSWORD_FILE=/run/secrets/pihole-webpassword
+      - DNSMASQ_LISTENING=local
+      - WEB_PORT=8000
+      - DNSMASQ_USER=pihole
+    volumes:
+      - /volume1/docker/pihole/dnsmasq.d:/etc/dnsmasq.d
+      - /volume1/docker/pihole/pihole:/etc/pihole
+    ports:
+      - 53:53/tcp
+      - 53:53/udp
+      - 8001:8000/tcp
+    networks:
+      pihole_network:
+        ipv4_address: 172.18.0.2
+    restart: unless-stopped
+
+networks:
+  # give pihole a hard-coded IP address for the firewall
+  pihole_network:
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+          ip_range: 172.18.0.0/24
