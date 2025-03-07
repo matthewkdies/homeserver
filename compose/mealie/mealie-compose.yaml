@@ -24,15 +24,14 @@ services:
     # mealie advises against using the latest tag
     # however, I like new features/bug fixes and I know how to debug
     # image: ghcr.io/mealie-recipes/mealie:latest
+    image: mealie-pwa-theme-fix:2.7.1
     build:
       # there's a bug that causes the PWA theme-color to not be respected:
       # https://github.com/mealie-recipes/mealie/issues/4563
       # in order to resolve it, I build my own custom image to use (until it's resolved)
       context: ${COMPOSE_DIR}/mealie/mealie_source
-      dockerfile: ${COMPOSE_DIR}/mealie/mealie_source/custom.dockerfile
+      dockerfile: ${COMPOSE_DIR}/mealie/mealie_source/docker/Dockerfile
     container_name: mealie
-    entrypoint: [ "/app/docker-entrypoint.sh", "/app/run.sh" ]
-    image: mealie-pwa-theme-fix:2.5.0
     labels:  # watchtower can't build images, so we'll ignore it
       - "com.centurylinklabs.watchtower.enable=false"  # TODO: remove when issue is resolved
     hostname: mealie
@@ -47,7 +46,6 @@ services:
         condition: service_healthy
     volumes:
       - mealie_data:/app/data/:rw
-      - ${SCRIPTS_DIR}/set_secret_vars.sh:/app/docker-entrypoint.sh
     environment:
       ALLOW_SIGNUP: false # prevents uninvited signup
       PUID: 123
@@ -56,6 +54,8 @@ services:
       BASE_URL: https://mealie.mattdies.com
       # database settings
       DB_ENGINE: postgres
+      POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD_FILE: /run/secrets/POSTGRES_PASSWORD
       POSTGRES_SERVER: mealie-postgres
       POSTGRES_PORT: 5432
       POSTGRES_DB: mealie
@@ -66,9 +66,10 @@ services:
       SMTP_AUTH_STRATEGY: TLS
       SMTP_FROM_EMAIL: ${GMAIL}
       SMTP_USER: ${GMAIL}
+      SMTP_PASSWORD_FILE: /run/secrets/SMTP_PASSWORD
       # visual settings
-      THEME_LIGHT_PRIMARY: "#525E3C"
-      THEME_DARK_PRIMARY: "#525E3C"
+      THEME_LIGHT_PRIMARY: 525E3C
+      THEME_DARK_PRIMARY: 525E3C
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
