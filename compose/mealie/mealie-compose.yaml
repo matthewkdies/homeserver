@@ -12,8 +12,6 @@
 # ----------------------------------------------------------------------------------------
 
 secrets:
-  BASE_URL:
-    file: ${SECRETS_DIR}/mealie_base_url
   POSTGRES_USER:
     file: ${SECRETS_DIR}/mealie_postgres_user
   POSTGRES_PASSWORD:
@@ -55,6 +53,7 @@ services:
       PUID: 123
       PGID: 124
       TZ: America/New_York
+      BASE_URL: https://mealie.mattdies.com
       # database settings
       DB_ENGINE: postgres
       POSTGRES_SERVER: mealie-postgres
@@ -71,7 +70,6 @@ services:
       THEME_LIGHT_PRIMARY: "#525E3C"
       THEME_DARK_PRIMARY: "#525E3C"
     secrets:
-      - BASE_URL
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - SMTP_PASSWORD
