@@ -5,6 +5,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## Unreleased
+### Added
+- The `chore` tag is now applied to issues created with the chore issue template.
+
+### Changed
+- The `BASE_URL` environment variable in Mealie is now set directly rather than with a secret.
+- The remaining secrets in Mealie are now set with their `<env_varname>_FILE` variable counterpart as an environment variable.
+
+### Removed
+- The custom entrypoint script from the Mealie container.
+
+
+
 ## [0.2.0] - 2024/02/09
 ### Added
 - Compose file for my Minecraft server.

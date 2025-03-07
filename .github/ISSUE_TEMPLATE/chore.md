@@ -2,7 +2,7 @@
 name: Chore
 about: For updating containers, running maintenance tasks, etc.
 title: "[CHORE] "
-labels: ''
+labels: chore
 assignees: matthewkdies
 
 ---
