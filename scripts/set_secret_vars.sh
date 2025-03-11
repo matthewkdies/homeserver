@@ -25,5 +25,5 @@ for secret_file in /run/secrets/*; do
 done
 
 # execute the command passed to the script
-echo "Executing entrypoint: $@."
+echo "Executing entrypoint: $*."
 exec "$@"

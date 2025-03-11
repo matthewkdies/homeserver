@@ -4,11 +4,6 @@
 # Furthermore, the recipes can be added to a meal plan and then exported directly
 # to shopping lists, which has become my #1 method for meal planning and grocery shopping.
 # It also has a fairly well-maintained PWA, which makes mobile usage well-integrated.
-# 
-# A note on some of the interesting stuff below: at the time of writing this, Mealie has
-# not yet fully supported Docker secrets. I want to use them more than they currently 
-# support, so I've written a custom entrypoint script to set environment variables from
-# these secret files. This explains the (1) custom entrypoint and the (2) mounted file.
 # ----------------------------------------------------------------------------------------
 
 secrets:

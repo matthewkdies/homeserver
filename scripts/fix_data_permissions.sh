@@ -19,8 +19,8 @@ set_permissions() {
             # set file permissions to 664
             find "$dir" -type f -exec chmod 664 {} \;
 
-            torrents_dir="$dir/torrents"
-            chown -R qbittorrent "$dir/torrents"
+            torrents_dir="${dir}/torrents"
+            chown -R qbittorrent "${torrents_dir}"
 
             echo "Permissions set successfully for $dir"
         else
