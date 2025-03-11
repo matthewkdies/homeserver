@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - The `BASE_URL` environment variable in Mealie is now set directly rather than with a secret.
 - The remaining secrets in Mealie are now set with their `<env_varname>_FILE` variable counterpart as an environment variable.
+- The script I use to update and push my edits to the football pool website now uses a full path so I can call it from anywhere.
 
 ### Removed
 - The custom entrypoint script from the Mealie container.
