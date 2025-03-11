@@ -26,13 +26,13 @@ services:
               count: 1
               capabilities: [gpu]
     environment:
-      - PUID=1028
-      - PGID=65536
-      - TZ=America/New_York
-      - VERSION=latest
-      - FILE__PLEX_CLAIM=/run/secrets/plex-claim-token  # retrieved from Plex to verify the Plex Pass
-      - NVIDIA_VISIBLE_DEVICES=all  # see "Nvidia" section here: https://hub.docker.com/r/linuxserver/plex
-      - NVIDIA_DRIVER_CAPABILITIES=compute,video,utility
+      PUID: 1028
+      PGID: 65536
+      TZ: America/New_York
+      VERSION: latest
+      FILE__PLEX_CLAIM: /run/secrets/plex-claim-token  # retrieved from Plex to verify the Plex Pass
+      NVIDIA_VISIBLE_DEVICES: all  # see "Nvidia" section here: https://hub.docker.com/r/linuxserver/plex
+      NVIDIA_DRIVER_CAPABILITIES: compute,video,utility
     secrets:
       - plex-claim-token
     healthcheck:

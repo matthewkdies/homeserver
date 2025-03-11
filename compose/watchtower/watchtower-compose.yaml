@@ -19,12 +19,12 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      - LOG_LEVEL=info
-      - POST=1
-      - CONTAINERS=1
-      - IMAGES=1
-      - NETWORKS=1
-      - VOLUMES=1
+      LOG_LEVEL: info
+      POST: 1
+      CONTAINERS: 1
+      IMAGES: 1
+      NETWORKS: 1
+      VOLUMES: 1
     security_opt:
       - no-new-privileges:true
     labels:
@@ -36,20 +36,20 @@ services:
     depends_on:
       - watchtower-socket-proxy
     environment:
-      - DOCKER_HOST=tcp://watchtower-socket-proxy:2375
-      - TZ=America/New_York
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_INCLUDE_STOPPED=true # update stopped containers
-      - WATCHTOWER_REVIVE_STOPPED=false # but don't start them after
-      - WATCHTOWER_SCHEDULE=0 0 3 * * * # daily at 3:00:00 AM
-      - WATCHTOWER_NOTIFICATION_EMAIL_FROM=${GMAIL}
-      - WATCHTOWER_NOTIFICATION_EMAIL_TO=${GMAIL}
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER=smtp.gmail.com
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT=587
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER=${GMAIL}
-      - WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD=/run/secrets/gmail_password
-      - WATCHTOWER_NOTIFICATION_EMAIL_DELAY=30
-      - WATCHTOWER_NOTIFICATIONS=email
+      DOCKER_HOST: tcp://watchtower-socket-proxy:2375
+      TZ: America/New_York
+      WATCHTOWER_CLEANUP: true
+      WATCHTOWER_INCLUDE_STOPPED: true # update stopped containers
+      WATCHTOWER_REVIVE_STOPPED: false # but don't start them after
+      WATCHTOWER_SCHEDULE: 0 0 3 * * * # daily at 3:00:00 AM
+      WATCHTOWER_NOTIFICATION_EMAIL_FROM: ${GMAIL}
+      WATCHTOWER_NOTIFICATION_EMAIL_TO: ${GMAIL}
+      WATCHTOWER_NOTIFICATION_EMAIL_SERVER: smtp.gmail.com
+      WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PORT: 587
+      WATCHTOWER_NOTIFICATION_EMAIL_SERVER_USER: ${GMAIL}
+      WATCHTOWER_NOTIFICATION_EMAIL_SERVER_PASSWORD: /run/secrets/gmail_password
+      WATCHTOWER_NOTIFICATION_EMAIL_DELAY: 30
+      WATCHTOWER_NOTIFICATIONS: email
     secrets:
       - gmail_password
     restart: unless-stopped

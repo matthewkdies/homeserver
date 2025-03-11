@@ -42,9 +42,9 @@ services:
     container_name: sonarr
     hostname: sonarr
     environment:
-      - PUID=133
-      - PGID=65536
-      - TZ=America/New_York
+      PUID: 133
+      PGID: 65536
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:8989/api/v3/health?apikey=${SONARR_API_KEY} || exit 1
     #   interval: 5m00s
@@ -70,9 +70,9 @@ services:
     container_name: radarr
     hostname: radarr
     environment:
-      - PUID=136
-      - PGID=65536
-      - TZ=America/New_York
+      PUID: 136
+      PGID: 65536
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:7878/api/v3/health?apikey=${RADARR_API_KEY} || exit 1
     #   interval: 5m00s
@@ -98,9 +98,9 @@ services:
     container_name: lidarr
     hostname: lidarr
     environment:
-      - PUID=137
-      - PGID=65536
-      - TZ=America/New_York
+      PUID: 137
+      PGID: 65536
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:8686/api/v1/health?apikey=${LIDARR_API_KEY} || exit 1
     #   interval: 5m00s
@@ -126,9 +126,9 @@ services:
     container_name: prowlarr
     hostname: prowlarr
     environment:
-      - PUID=138
-      - PGID=133
-      - TZ=America/New_York
+      PUID: 138
+      PGID: 133
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:9696/api/v1/health?apikey=${PROWLARR_API_KEY} || exit 1
     #   interval: 5m00s
@@ -152,9 +152,9 @@ services:
     container_name: bazarr
     hostname: bazarr
     environment:
-      - PUID=139
-      - PGID=65536
-      - TZ=America/New_York
+      PUID: 139
+      PGID: 65536
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:6767/api/system/status?apikey=${BAZARR_API_KEY} || exit 1
     #   interval: 5m00s
@@ -181,9 +181,9 @@ services:
     container_name: overseerr
     hostname: overseerr
     environment:
-      - PUID=140
-      - PGID=136
-      - TZ=America/New_York
+      PUID: 140
+      PGID: 136
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:5055/api/v1/status || exit 1
     #   interval: 5m00s
@@ -226,17 +226,17 @@ services:
       - 8265
       - 8266
     environment:
-      - TZ=America/New_York
-      - PUID=141
-      - PGID=65536
-      - serverIP=0.0.0.0
-      - serverPort=8266
-      - webUIPort=8265
-      - internalNode=true
-      - inContainer=true
-      - nodeID=InternalNode
-      - NVIDIA_DRIVER_CAPABILITIES=all
-      - NVIDIA_VISIBLE_DEVICES=all
+      TZ: America/New_York
+      PUID: 141
+      PGID: 65536
+      serverIP: 0.0.0.0
+      serverPort: 8266
+      webUIPort: 8265
+      internalNode: true
+      inContainer: true
+      nodeID: InternalNode
+      NVIDIA_DRIVER_CAPABILITIES: all
+      NVIDIA_VISIBLE_DEVICES: all
     volumes:
       - tdarr_config:/app
       - ${DATA_DIR}/media:/media
@@ -254,7 +254,7 @@ services:
     container_name: flaresolverr
     hostname: flaresolverr
     environment:
-      - TZ=America/New_York
+      TZ: America/New_York
     # healthcheck:
     #   test: curl -f http://localhost:8191 || exit 1
     #   interval: 5m00s
@@ -288,19 +288,19 @@ services:
     volumes:
       - gluetun_config:/gluetun
     environment:
-      - PUID=132
-      - PGID=132
-      - VPN_SERVICE_PROVIDER=mullvad
-      - VPN_TYPE=wireguard
-      - WIREGUARD_PRIVATE_KEY_SECRETFILE=/run/secrets/wireguard-private-key
-      - WIREGUARD_ADDRESSES_SECRETFILE=/run/secrets/wireguard-addresses
-      - SERVER_CITIES=Zurich
-      - SERVER_COUNTRIES=Switzerland
-      - TZ=America/New_York
-      - HTTPPROXY=off
-      - SHADOWSOCKS=off
-      - FIREWALL_OUTBOUND_SUBNETS=172.19.0.0/16,192.168.1.0/24
-      - UPDATER_PERIOD=24h
+      PUID: 132
+      PGID: 132
+      VPN_SERVICE_PROVIDER: mullvad
+      VPN_TYPE: wireguard
+      WIREGUARD_PRIVATE_KEY_SECRETFILE: /run/secrets/wireguard-private-key
+      WIREGUARD_ADDRESSES_SECRETFILE: /run/secrets/wireguard-addresses
+      SERVER_CITIES: Zurich
+      SERVER_COUNTRIES: Switzerland
+      TZ: America/New_York
+      HTTPPROXY: off
+      SHADOWSOCKS: off
+      FIREWALL_OUTBOUND_SUBNETS: 172.19.0.0/16,192.168.1.0/24
+      UPDATER_PERIOD: 24h
     secrets:
       - wireguard-private-key
       - wireguard-addresses
@@ -320,11 +320,11 @@ services:
     image: linuxserver/qbittorrent:latest
     container_name: qbittorrent
     environment:
-      - PUID=142
-      - PGID=65536
-      - TZ=America/New_York
-      - WEBUI_PORT=8090
-      - DOCKER_MODS=ghcr.io/gabe565/linuxserver-mod-vuetorrent  # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
+      PUID: 142
+      PGID: 65536
+      TZ: America/New_York
+      WEBUI_PORT: 8090
+      DOCKER_MODS: ghcr.io/gabe565/linuxserver-mod-vuetorrent  # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
     # healthcheck:
     #   test: >
     #     curl -i --header 'Referer: http://localhost:8090' --data 'username=${QBITTORRENT_USERNAME}&password=${QBITTORRENT_PASSWORD}' http://localhost:8090/api/v2/auth/login || exit 1
@@ -349,9 +349,9 @@ services:
     image: linuxserver/tautulli:latest
     container_name: tautulli
     environment:
-      - PUID=143
-      - PGID=137
-      - TZ=America/New_York
+      PUID: 143
+      PGID: 137
+      TZ: America/New_York
     volumes:
       - tautulli_config:/config
     expose:
