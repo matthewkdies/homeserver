@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - The `chore` tag is now applied to issues created with the chore issue template.
+- Sensible `depends_on` settings to the Arr-suite's compose file, so that apps no longer behave strangely on startup if they start before another app is running.
 
 ### Changed
 - The `BASE_URL` environment variable in Mealie is now set directly rather than with a secret.
