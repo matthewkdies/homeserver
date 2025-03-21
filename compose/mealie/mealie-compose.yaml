@@ -13,6 +13,8 @@ secrets:
     file: ${SECRETS_DIR}/mealie_postgres_password
   SMTP_PASSWORD:
     file: ${SECRETS_DIR}/mealie_gmail_password
+  OPENAI_API_KEY:
+    file: ${SECRETS_DIR}/mealie_openai_api_key
 
 services:
   mealie:
@@ -65,10 +67,14 @@ services:
       # visual settings
       THEME_LIGHT_PRIMARY: 525E3C
       THEME_DARK_PRIMARY: 525E3C
+      # OpenAI integration
+      OPENAI_API_KEY_FILE: /run/secrets/OPENAI_API_KEY
+      OPENAI_MODEL: gpt-4o-mini  # upgrade to gpt-4o if needed
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - SMTP_PASSWORD
+      - OPENAI_API_KEY
     security_opt:
       - no-new-privileges:true
     networks:

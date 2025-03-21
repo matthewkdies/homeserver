@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- Mealie now has OpenAI integration, which will allow users to import recipes from images and to use the OpenAI ingredient parser.
 - The `chore` tag is now applied to issues created with the chore issue template.
 
 ### Changed
