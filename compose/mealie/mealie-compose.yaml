@@ -13,13 +13,15 @@ secrets:
     file: ${SECRETS_DIR}/mealie_postgres_password
   SMTP_PASSWORD:
     file: ${SECRETS_DIR}/mealie_gmail_password
+  OPENAI_API_KEY:
+    file: ${SECRETS_DIR}/mealie_openai_api_key
 
 services:
   mealie:
     # mealie advises against using the latest tag
     # however, I like new features/bug fixes and I know how to debug
     # image: ghcr.io/mealie-recipes/mealie:latest
-    image: mealie-pwa-theme-fix:2.7.1
+    image: mealie-pwa-theme-fix:2.8.0
     build:
       # there's a bug that causes the PWA theme-color to not be respected:
       # https://github.com/mealie-recipes/mealie/issues/4563
@@ -65,10 +67,14 @@ services:
       # visual settings
       THEME_LIGHT_PRIMARY: 525E3C
       THEME_DARK_PRIMARY: 525E3C
+      # OpenAI integration
+      OPENAI_API_KEY_FILE: /run/secrets/OPENAI_API_KEY
+      OPENAI_MODEL: gpt-4o-mini  # upgrade to gpt-4o if needed
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - SMTP_PASSWORD
+      - OPENAI_API_KEY
     security_opt:
       - no-new-privileges:true
     networks:
