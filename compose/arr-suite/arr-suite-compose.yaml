@@ -62,7 +62,8 @@ services:
         ipv4_address: 172.19.0.9  # static IP for in-app config
     security_opt:
       - no-new-privileges:true
-    depends_on: qbittorrent
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
 
   # movie monitoring + management
@@ -91,7 +92,8 @@ services:
         ipv4_address: 172.19.0.8  # static IP for in-app config
     security_opt:
       - no-new-privileges:true
-    depends_on: qbittorrent
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
   
   # music monitoring + management
@@ -120,7 +122,8 @@ services:
         ipv4_address: 172.19.0.12  # static IP for in-app config
     security_opt:
       - no-new-privileges:true
-    depends_on: qbittorrent
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
 
   # torrent client monitoring + management
