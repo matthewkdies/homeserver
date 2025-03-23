@@ -39,7 +39,6 @@ services:
       - no-new-privileges:true
     volumes:
       - lubelogger_pg_data:/var/lib/postgresql/data
-      - ${COMPOSE_DIR}/lubelogger/pg_healthcheck.sh:/pg_healthcheck.sh
       - /etc/localtime:/etc/localtime:ro
     secrets:
       - postgres_user
