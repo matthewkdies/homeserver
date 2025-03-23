@@ -381,6 +381,7 @@ services:
   tautulli:
     image: linuxserver/tautulli:latest
     container_name: tautulli
+    hostname: tautulli
     environment:
       PUID: 143
       PGID: 137
