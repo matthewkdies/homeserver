@@ -1,0 +1,62 @@
+# -----------------------------------------------------------------------
+# LubeLogger has a really unfortunate name. It can also track the mileage
+# and maintenance schedule/history of your vehicles. I basically got this
+# so that I could have an excuse to get rid of the paper records we have.
+# -----------------------------------------------------------------------
+
+secrets:
+  postgres_user:
+    file: ${SECRETS_DIR}/lubelogger_postgres_user
+  postgres_password:
+    file: ${SECRETS_DIR}/lubelogger_postgres_password
+
+services:
+  lubelogger:
+    image: ghcr.io/hargata/lubelogger:latest
+    container_name: lubelogger
+    hostname: lubelogger
+    entrypoint: [ "/docker-entrypoint.sh" ]
+    command: [ "./CarCareTracker" ]
+    volumes:
+      - lubelogger_data:/App/data
+      - lubelogger_keys:/root/.aspnet/DataProtection-Keys
+      - ${COMPOSE_DIR}/lubelogger/custom_entrypoint.sh:/docker-entrypoint.sh
+    expose:
+      - 8080
+    secrets:
+      - postgres_user
+      - postgres_password
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.17
+      default:
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17
+    container_name: lubelogger-postgres
+    hostname: lubelogger-postgres
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - lubelogger_pg_data:/var/lib/postgresql/data
+      - /etc/localtime:/etc/localtime:ro
+    secrets:
+      - postgres_user
+      - postgres_password
+    environment:
+      POSTGRES_DB: lubelogger
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    networks:
+      default:
+    restart: unless-stopped
+
+volumes:
+  lubelogger_data:
+  lubelogger_keys:
+  lubelogger_pg_data:
+
+networks:
+  webapps:
+    external: true

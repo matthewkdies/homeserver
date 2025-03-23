@@ -38,6 +38,7 @@
 (cloudflare_dns) {
 	tls {
         dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		resolvers 1.1.1.1 1.1.1.2
     }
 }
 
@@ -90,7 +91,7 @@ actual.mattdies.com {
 	import local_network_only
 	import log_for_app "actual"
 	reverse_proxy actual:5006 {
-		header_up x-actual-password {env.ACTUAL_PASSWORD}
+		header_up x-actual-password "{env.ACTUAL_PASSWORD}"
 	}
 }
 
@@ -229,4 +230,12 @@ footballpool.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "footballpool"
 	reverse_proxy football-pool:5600
+}
+
+# lubelogger
+lubelogger.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "lubelogger"
+	reverse_proxy lubelogger:8080
 }
