@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - All Docker Compose files now use a consistent environment variable definition of `KEY: value` (rather than `- KEY=value`) ([#6](https://github.com/matthewkdies/homeserver/issues/6)).
 - The script I use to update Caddy now uses `docker compose up --detach` rather than `docker compose restart`.
 
+### Fixed
+- An error within my Caddy setup in which ACME DNS Challenges would fail due to my local DNS (Pi-hole) being used. Adding the Caddy `tls -> resolvers` directive directed to a public DNS resolves the issue.
+
 ### Removed
 - The custom entrypoint script from the Mealie container.
 
