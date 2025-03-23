@@ -25,7 +25,7 @@ for secret_file in /run/secrets/*; do
 done
 
 echo "Setting POSTGRES_CONNECTION variable."
-export POSTGRES_CONNECTION="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@lubelogger-postgres/lubelogger"
+export POSTGRES_CONNECTION="Host=lubelogger-postgres:5432;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD};Database=lubelogger"
 echo "POSTGRES_CONNECTION exported successfully."
 
 # execute the command passed to the script
