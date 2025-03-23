@@ -167,9 +167,8 @@ soulseek.mattdies.com {
 	import local_network_only
 	import log_for_app "soulseek"
 	reverse_proxy soulseek:5030 {
-		header_up Upgrade {http.request.headers.Upgrade}
-		header_up Connection "Upgrade"
-		header_up Host {http.request.host}
+		header_up Upgrade "websocket"
+        header_up Connection "Upgrade"
 	}
 }
 
@@ -226,7 +225,6 @@ footballpool.mattdies.com {
 	reverse_proxy football-pool:5600
 }
 
-# lubelogger
 lubelogger.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
