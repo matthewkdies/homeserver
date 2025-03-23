@@ -11,6 +11,6 @@ docker pull caddy:2
 
 # build and restart using docker-compose
 docker compose --file "${COMPOSE_DIR}/caddy/caddy-compose.yaml" build
-docker compose --file "${COMPOSE_DIR}/caddy/caddy-compose.yaml" restart
+docker compose --file "${COMPOSE_DIR}/caddy/caddy-compose.yaml" up --detach
 
 echo "Caddy update process completed successfully at $(date)"

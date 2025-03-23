@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Mealie now has OpenAI integration, which will allow users to import recipes from images and to use the OpenAI ingredient parser.
 - The `chore` tag is now applied to issues created with the chore issue template.
+- Sensible `depends_on` settings to the Arr-suite's compose file, so that apps no longer behave strangely on startup if they start before another app is running.
+- [LubeLogger](https://github.com/hargata/lubelog) has been added as a new app for tracking vehicle maintenance and mileage ([#17](https://github.com/matthewkdies/homeserver/issues/17)).
 
 ### Changed
 - Mealie has been updated to 2.8.0.
@@ -17,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The script I use to update and push my edits to the football pool website now uses a full path so I can call it from anywhere.
 - Applying Shellcheck edits to scripts.
 - All Docker Compose files now use a consistent environment variable definition of `KEY: value` (rather than `- KEY=value`) ([#6](https://github.com/matthewkdies/homeserver/issues/6)).
+- The script I use to update Caddy now uses `docker compose up --detach` rather than `docker compose restart`.
+
+### Fixed
+- An error within my Caddy setup in which ACME DNS Challenges would fail due to my local DNS (Pi-hole) being used. Adding the Caddy `tls -> resolvers` directive directed to a public DNS resolves the issue.
 
 ### Removed
 - The custom entrypoint script from the Mealie container.
