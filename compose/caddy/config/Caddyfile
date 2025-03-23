@@ -160,7 +160,18 @@ vuetorrent.mattdies.com {
 	reverse_proxy gluetun:8090
 }
 
-# tautulli
+soulseek.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "soulseek"
+	reverse_proxy soularr:5030 {
+		header_up Upgrade {http.request.headers.Upgrade}
+		header_up Connection "Upgrade"
+		header_up Host {http.request.host}
+	}
+}
+
 tautulli.mattdies.com {
 	import cloudflare_dns
 	import local_network_only

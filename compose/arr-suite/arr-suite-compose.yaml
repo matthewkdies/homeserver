@@ -344,6 +344,39 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  soulseek:
+    image: slskd/slskd:latest
+    container_name: soulseek
+    hostname: soulseek
+    expose: 
+      - 5030
+    ports:
+      - 50300:50300/tcp
+    volumes:
+      - soulseek_config:/app
+      - ${DATA_DIR}:/data
+      - ${DATA3_DIR}:/data3
+    user: 146:140
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.18  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # soularr:
+  #   image: mrusse08/soularr:latest
+  #   container_name: soularr
+  #   hostname: soularr
+  #   user: 1000:1000
+  #   environment:
+  #     - TZ=ETC/UTC
+  #     - SCRIPT_INTERVAL=300
+  #   volumes:
+  #     - /Media/slskd_downloads:/downloads
+  #     - /Container/soularr:/data
+  #   restart: unless-stopped
+
   # monitoring dashboard
   tautulli:
     image: linuxserver/tautulli:latest
@@ -373,6 +406,7 @@ volumes:
   tdarr_config:
   gluetun_config:
   qbittorrent_config:
+  soulseek_config:
   tautulli_config:
 
 networks:
