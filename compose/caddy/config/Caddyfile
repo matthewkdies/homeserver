@@ -166,7 +166,7 @@ soulseek.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "soulseek"
-	reverse_proxy soularr:5030 {
+	reverse_proxy soulseek:5030 {
 		header_up Upgrade {http.request.headers.Upgrade}
 		header_up Connection "Upgrade"
 		header_up Host {http.request.host}
