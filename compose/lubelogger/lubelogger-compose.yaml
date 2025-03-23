@@ -29,6 +29,7 @@ services:
     networks:
       webapps:
         ipv4_address: 172.19.0.17
+      default:
     restart: unless-stopped
 
   postgres:
@@ -47,6 +48,8 @@ services:
       POSTGRES_DB: lubelogger
       POSTGRES_USER_FILE: /run/secrets/postgres_user
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    networks:
+      default:
     restart: unless-stopped
 
 volumes:
