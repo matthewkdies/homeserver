@@ -355,6 +355,7 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  # connects to the soulseek network to download royalty-free music
   soulseek:
     image: slskd/slskd:latest
     container_name: soulseek
@@ -382,18 +383,26 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
-  # soularr:
-  #   image: mrusse08/soularr:latest
-  #   container_name: soularr
-  #   hostname: soularr
-  #   user: 1000:1000
-  #   environment:
-  #     - TZ=ETC/UTC
-  #     - SCRIPT_INTERVAL=300
-  #   volumes:
-  #     - /Media/slskd_downloads:/downloads
-  #     - /Container/soularr:/data
-  #   restart: unless-stopped
+  # links lidarr to soulseek, starting downloads and running manual imports
+  soularr:
+    image: mrusse08/soularr:latest
+    container_name: soularr
+    hostname: soularr
+    user: 147:65536
+    environment:
+      - TZ=America/New_York
+      - SCRIPT_INTERVAL=300
+    volumes:
+      - ${DATA3_DIR}/music/downloads:/downloads
+      - ${DOCKER_DIR}/soularr:/data
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.19  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - soulseek
+    restart: unless-stopped
 
   # monitoring dashboard
   tautulli:
@@ -425,7 +434,7 @@ volumes:
   tdarr_config:
   gluetun_config:
   qbittorrent_config:
-  soulseek_config:
+  soulseek_data:
   tautulli_config:
 
 networks:

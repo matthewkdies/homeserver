@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sensible `depends_on` settings to the Arr-suite's compose file, so that apps no longer behave strangely on startup if they start before another app is running.
 - [LubeLogger](https://github.com/hargata/lubelog) has been added for tracking vehicle maintenance and mileage ([#17](https://github.com/matthewkdies/homeserver/issues/17)).
 - slskd + soularr ([#25](https://github.com/matthewkdies/homeserver/issues/25)):
-  - [slskd](https://github.com/slskd/slskd?tab=readme-ov-file#slskd) has been added for using the Soulseek network to connect to other users for sending and receiving music in the public domain. 
+  - [slskd](https://github.com/slskd/slskd?tab=readme-ov-file#slskd) has been added for using the Soulseek network to connect to other users for sending and receiving music in the public domain.
+  - [soularr](https://github.com/mrusse/soularr?tab=readme-ov-file#about) has been added for connecting Lidarr to slskd.
 
 ### Changed
 - Mealie has been updated to 2.8.0.
@@ -28,7 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - The custom entrypoint script from the Mealie container.
-
 
 
 ## [0.2.0] - 2024/02/09
