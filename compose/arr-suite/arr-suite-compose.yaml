@@ -366,6 +366,7 @@ services:
     environment:
       - SLSKD_DOWNLOADS_DIR=/downloads
       - SLSKD_INCOMPLETE_DIR=/incomplete
+      - SLSKD_UMASK=002
     volumes:
       - soulseek_data:/app/data
       - ${DATA3_DIR}/music/downloads:/downloads
