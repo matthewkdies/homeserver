@@ -363,9 +363,16 @@ services:
       - 5030
     ports:
       - 50300:50300/tcp
+    environment:
+      - SLSKD_DOWNLOADS_DIR=/downloads
+      - SLSKD_INCOMPLETE_DIR=/incomplete
     volumes:
+      - soulseek_data:/app/data
+      - ${DATA3_DIR}/music/downloads:/downloads
+      - ${DATA3_DIR}/music/incomplete:/incomplete
       - ${DATA_DIR}/media/music:/music
       - ${DATA3_DIR}/media/music:/music3
+      - ${DOCKER_DIR}/soulseek/slskd.yml:/app/slskd.yml
     networks:
       webapps:
         ipv4_address: 172.19.0.18  # static IP for in-app config
