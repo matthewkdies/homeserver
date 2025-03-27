@@ -364,10 +364,8 @@ services:
     ports:
       - 50300:50300/tcp
     volumes:
-      - soulseek_config:/app
-      - ${DATA_DIR}:/data
-      - ${DATA3_DIR}:/data3
-    user: 146:140
+      - ${DATA_DIR}/media/music:/music
+      - ${DATA3_DIR}/media/music:/music3
     networks:
       webapps:
         ipv4_address: 172.19.0.18  # static IP for in-app config
