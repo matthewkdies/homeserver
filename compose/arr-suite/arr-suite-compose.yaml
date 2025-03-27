@@ -62,7 +62,8 @@ services:
         ipv4_address: 172.19.0.9  # static IP for in-app config
     security_opt:
       - no-new-privileges:true
-    depends_on: qbittorrent
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
 
   # movie monitoring + management
@@ -91,7 +92,8 @@ services:
         ipv4_address: 172.19.0.8  # static IP for in-app config
     security_opt:
       - no-new-privileges:true
-    depends_on: qbittorrent
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
   
   # music monitoring + management
@@ -120,7 +122,8 @@ services:
         ipv4_address: 172.19.0.12  # static IP for in-app config
     security_opt:
       - no-new-privileges:true
-    depends_on: qbittorrent
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
 
   # torrent client monitoring + management
@@ -352,10 +355,60 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  # connects to the soulseek network to download royalty-free music
+  soulseek:
+    image: slskd/slskd:latest
+    container_name: soulseek
+    hostname: soulseek
+    expose: 
+      - 5030
+    ports:
+      - 50300:50300/tcp
+    environment:
+      - SLSKD_DOWNLOADS_DIR=/downloads
+      - SLSKD_INCOMPLETE_DIR=/incomplete
+      - SLSKD_UMASK=002
+    volumes:
+      - soulseek_data:/app/data
+      - ${DATA3_DIR}/music/downloads:/downloads
+      - ${DATA3_DIR}/music/incomplete:/incomplete
+      - ${DATA_DIR}/media/music:/music
+      - ${DATA3_DIR}/media/music:/music3
+      - ${DOCKER_DIR}/soulseek/slskd.yml:/app/slskd.yml
+    user: 146:65536
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.18  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # links lidarr to soulseek, starting downloads and running manual imports
+  soularr:
+    image: mrusse08/soularr:latest
+    container_name: soularr
+    hostname: soularr
+    user: 147:65536
+    environment:
+      - TZ=America/New_York
+      - SCRIPT_INTERVAL=300
+    volumes:
+      - ${DATA3_DIR}/music/downloads:/downloads
+      - ${DOCKER_DIR}/soularr:/data
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.19  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - soulseek
+    restart: unless-stopped
+
   # monitoring dashboard
   tautulli:
     image: linuxserver/tautulli:latest
     container_name: tautulli
+    hostname: tautulli
     environment:
       PUID: 143
       PGID: 137
@@ -381,6 +434,7 @@ volumes:
   tdarr_config:
   gluetun_config:
   qbittorrent_config:
+  soulseek_data:
   tautulli_config:
 
 networks:
