@@ -373,6 +373,7 @@ services:
       - ${DATA_DIR}/media/music:/music
       - ${DATA3_DIR}/media/music:/music3
       - ${DOCKER_DIR}/soulseek/slskd.yml:/app/slskd.yml
+    user: 146:65536
     networks:
       webapps:
         ipv4_address: 172.19.0.18  # static IP for in-app config
