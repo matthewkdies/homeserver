@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+- A `backup_volumes.sh` script that does the following:
+  - Confirms availability of network mount intended for backups.
+  - Prunes unused Docker volumes.
+  - Backs up all Docker volumes by using a transient container with volume mounts create a tarfile of the data.
+  - Cleans old backups by using timestamps to always keep 3 copies of each volume's backup tarfile and deleting any older than that.
+  - Logs output to stdout and to a logfile for later access.
+  > This script has been set to run daily with `crontab`.
 - A `soulseek_config` volume to the `soulseek` service. I don't do anything with it, but the image contains a `VOLUME` instruction, so it was making an unnamed volume. This addition at least names the volume.
 
 ### Changed
