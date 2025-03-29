@@ -370,6 +370,7 @@ services:
       - SLSKD_UMASK=002
     volumes:
       - soulseek_data:/app/data
+      - soulseek_config:/app
       - ${DATA3_DIR}/music/downloads:/downloads
       - ${DATA3_DIR}/music/incomplete:/incomplete
       - ${DATA_DIR}/media/music:/music
@@ -435,6 +436,7 @@ volumes:
   gluetun_config:
   qbittorrent_config:
   soulseek_data:
+  soulseek_config:
   tautulli_config:
 
 networks:

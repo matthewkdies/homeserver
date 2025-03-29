@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## Unreleased
+### Added
+- A `soulseek_config` volume to the `soulseek` service. I don't do anything with it, but the image contains a `VOLUME` instruction, so it was making an unnamed volume. This addition at least names the volume.
+
 ### Changed
 - Updated Authelia to [4.39.1](https://github.com/authelia/authelia/releases/tag/v4.39.1).
   > This may be a fairly significant update for some users. It's not in my case, but just in case, here are the [user-friendly release notes](https://www.authelia.com/blog/4.39-release-notes/).
