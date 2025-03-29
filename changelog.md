@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## Unreleased
+### Changed
+- Updated Authelia to [4.39.1](https://github.com/authelia/authelia/releases/tag/v4.39.1).
+  > This may be a fairly significant update for some users. It's not in my case, but just in case, here are the [user-friendly release notes](https://www.authelia.com/blog/4.39-release-notes/).
+
+
 ## [0.3.0] - 2025/03/26
 ### Added
 - Mealie now has OpenAI integration, which will allow users to import recipes from images and to use the OpenAI ingredient parser.
