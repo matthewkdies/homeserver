@@ -115,6 +115,14 @@ radarr.mattdies.com {
 	reverse_proxy radarr:7878
 }
 
+radarr4k.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "radarr4k"
+	reverse_proxy radarr4k:17878
+}
+
 lidarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
