@@ -16,6 +16,7 @@ set -e
 . /home/matthewkdies/.envvars
 
 LOG_FILE="${DOCKER_DIR}/log/backup.log"
+MAX_LOG_LINES=500
 BACKUP_DIR="/mnt/backups"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 MAX_BACKUPS=3  # Number of backups to retain per volume
@@ -24,6 +25,16 @@ MAX_BACKUPS=3  # Number of backups to retain per volume
 log_msg() {
     echo "$(date) - $1" | tee -a "${LOG_FILE}"
 }
+
+# function: keeps the logfile capped at a certain number of lines
+clean_log_file() {
+    NUM_LINES=$(wc -l "${LOG_FILE}" | awk '{ print $1 }')
+    if [ "${NUM_LINES}" -gt "${MAX_LOG_LINES}" ]; then
+        LINES_TO_DELETE=$((NUM_LINES - MAX_LOG_LINES))
+        sed -i "1,${LINES_TO_DELETE}d" "${LOG_FILE}"
+    fi
+}
+
 
 # function: remove the oldest backups until there are only MAX_BACKUPS backups remaining
 prune_old_backups() {
@@ -76,3 +87,5 @@ for VOLUME in $VOLUMES; do
 done
 
 log_msg "Backups completed successfully!"
+
+clean_log_file
