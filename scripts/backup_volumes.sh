@@ -44,7 +44,7 @@ prune_old_backups() {
     # only proceed if there are more backups than MAX_BACKUPS
     if (( ${#backups[@]} > MAX_BACKUPS )); then
         local to_delete_count=$(( ${#backups[@]} - MAX_BACKUPS ))
-        log_msg "Pruning ${to_delete_count} old backups for ${volume}."
+        log_msg "Pruning ${to_delete_count} old backup(s) for ${volume}."
 
         # 🚨 -- 🤖 below! -- 🚨
         # finds the tarfiles for the current volume in the backup directory + prints timestamps
