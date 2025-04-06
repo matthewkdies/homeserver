@@ -95,6 +95,35 @@ services:
     depends_on:
       - qbittorrent
     restart: unless-stopped
+
+  radarr4k:
+    image: linuxserver/radarr:latest
+    container_name: radarr4k
+    hostname: radarr4k
+    environment:
+      PUID: 136
+      PGID: 65536
+      TZ: America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:7878/api/v3/health?apikey=${RADARR_4K_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - radarr4k_config:/config
+      - ${DATA3_DIR}:/data3
+    expose:
+      - 17878
+    networks: 
+      webapps:
+        ipv4_address: 172.19.0.20  # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - qbittorrent
+      - radarr
+    restart: unless-stopped
   
   # music monitoring + management
   lidarr:
@@ -428,6 +457,7 @@ services:
 volumes:
   sonarr_config:
   radarr_config:
+  radarr4k_config:
   lidarr_config:
   prowlarr_config:
   bazarr_config:
