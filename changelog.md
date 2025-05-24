@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [0.5.0] - 2025/05/24
+### Added
+- A [kcal](https://github.com/kcal-app/kcal) container used for nutrition tracking.
+  > This configuration is more complicated than typical self-hosted web-apps. I've configured it to run with a non-standard UID + GID (using `su-exec` and a custom script for setting environment variables based on Docker secrets files) for security reasons. It also contains many more containers than a typical self-hosted web app.
+
 ## [0.4.0] - 2025/04/06
 ### Added
 - A second [Radarr](https://radarr.video/) container used for getting certain fair-use movies in 4K, alongside the existing 1080p fair-use movie.
