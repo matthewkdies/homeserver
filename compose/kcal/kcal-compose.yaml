@@ -1,0 +1,145 @@
+# --------------------------------------------------------------------------
+# kcal is a nutrition-tracking app that you can use to track foods, recipes,
+# nutrition goals, calories, macros, and much more. I plan to use it to
+# ensure that I'm getting enough BROtein while also hoping to cut a few lbs.
+# --------------------------------------------------------------------------
+
+secrets:
+  app_key:
+    file: ${SECRETS_DIR}/kcal_kcal_app_key
+  db_username:
+    file: ${SECRETS_DIR}/kcal_mysql_user
+  db_password:
+    file: ${SECRETS_DIR}/kcal_mysql_password
+  db_root_password:
+    file: ${SECRETS_DIR}/kcal_mysql_root_password
+
+services:
+  kcal:
+    image: kcalapp/kcal
+    container_name: kcal
+    command: [ "/docker-entrypoint.sh", "php-fpm" ]  # run custom command, still execute original one
+    tty: true
+    working_dir: /app
+    environment:
+      # kcal config
+      APP_NAME: kcal
+      APP_ENV: production
+      APP_DEBUG: false
+      APP_URL: https://kcal.mattdies.com
+      APP_PORT: 10081
+      APP_PORT_SSL: 10443
+      APP_TIMEZONE: America/New_York
+      # database
+      DB_CONNECTION: mysql
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_DATABASE: kcal
+      # redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      # search
+      SCOUT_DRIVER: elastic
+      ELASTIC_HOST: elasticsearch:9200
+      ELASTIC_PORT: 9200
+      # media
+      MEDIA_DISK: media
+      QUEUE_CONVERSIONS_BY_DEFAULT: false
+      # misc. drivers & config
+      BROADCAST_DRIVER: redis
+      CACHE_DRIVER: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: redis
+      SESSION_LIFETIME: 120
+    user: root  # to install su-exec, then su-exec runs
+    volumes:
+      - kcal_public_driver_data:/app/public/
+      - ${COMPOSE_DIR}/kcal/etc/php/php.ini:/usr/local/etc/php/conf.d/local.ini
+      - ${COMPOSE_DIR}/kcal/etc/php/TrustProxies.php:/app/app/Http/Middleware/TrustProxies.php
+      - ${COMPOSE_DIR}/kcal/docker-entrypoint.sh:/docker-entrypoint.sh
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/usr/local/bin/set_secret_vars.sh
+    secrets:  # set as env vars by the set_secret_vars.sh script call in the docker-entrypoint
+      - app_key
+      - db_username
+      - db_password
+    depends_on:
+      - mysql
+    expose:
+      - 10081
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: kcal-nginx
+    tty: true
+    working_dir: /app
+    expose:
+      - 10081
+    volumes:
+      - kcal_public_driver_data:/app/public/
+      - ${COMPOSE_DIR}/kcal/etc/nginx/conf.d/:/etc/nginx/conf.d/
+    networks:
+      default:
+      webapps:
+        ipv4_address: 172.19.0.21
+    depends_on:
+      - kcal
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: kcal-mysql
+    tty: true
+    expose:
+      - 3306
+    environment:
+      MYSQL_DATABASE: kcal
+      MYSQL_USER_FILE: /run/secrets/db_username
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+    volumes:
+      - kcal_db_data:/var/lib/mysql/
+      - ${COMPOSE_DIR}/kcal/etc/mysql/my.cnf:/etc/mysql/my.cnf
+    secrets:
+      - db_username
+      - db_password
+      - db_root_password
+    restart: unless-stopped
+
+  elasticsearch:
+    image: elasticsearch:7.12.0
+    container_name: kcal-elasticsearch
+    environment:
+      # - xpack.security.enabled=false
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - kcal_elasticsearch_data:/usr/share/elasticsearch/data
+    expose:
+      - 9200
+
+  redis:
+    image: redis:alpine
+    container_name: kcal-redis
+    expose:
+      - 6379
+    volumes:
+      - kcal_redis_data:/data
+
+networks:
+  webapps:
+    external: true
+
+volumes:
+  kcal_public_driver_data:
+  kcal_db_data:
+  kcal_elasticsearch_data:
+  kcal_redis_data:

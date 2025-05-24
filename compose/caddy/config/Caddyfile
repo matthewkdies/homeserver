@@ -240,3 +240,11 @@ lubelogger.mattdies.com {
 	import log_for_app "lubelogger"
 	reverse_proxy lubelogger:8080
 }
+
+kcal.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "kcal"
+	reverse_proxy kcal-nginx:10081
+}
