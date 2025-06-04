@@ -16,7 +16,10 @@
 #   6. Automated fetching of subtitles for media (bazarr)
 #   7. Transcoding of video media to meet custom-set specifications (tdarr)
 #   8. Plex activity monitoring (tautilli)
-# 
+#   9. Usage of the soulseek network to get free-use music from other users (soulseek)
+#   10. Connection between Lidarr's wanted list and Soulseek container (soularr)
+#   11. Automatic creation of Plex music playlists based on listening habit (meloday)
+#
 # Unfortunately, I haven't been great at keeping helpful links as I go so far.
 # Those that I remember off the top of my head are listed below:
 #   - https://trash-guides.info/: Helpful guides for configuring media management clients
