@@ -1,8 +1,8 @@
 # ----------------------------------------------------------------------------------------
 # The below containers all serve to supplement and automate a lot of Plex management.
 # For this reason, the Plex compose is kept separate, so that changes to these services
-# won't affect the availability of Plex itself. 
-# 
+# won't affect the availability of Plex itself.
+#
 # The current capabilities of this stack:
 #   1. Handling Plex users' content requests (overseerr)
 #   2. Creation of a VPN container that uses my Mullvad account (gluetun)
@@ -59,7 +59,7 @@ services:
       - 8989
     networks:
       webapps:
-        ipv4_address: 172.19.0.9  # static IP for in-app config
+        ipv4_address: 172.19.0.9 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
@@ -87,9 +87,9 @@ services:
       - ${DATA3_DIR}:/data3
     expose:
       - 7878
-    networks: 
+    networks:
       webapps:
-        ipv4_address: 172.19.0.8  # static IP for in-app config
+        ipv4_address: 172.19.0.8 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
@@ -115,16 +115,16 @@ services:
       - ${DATA3_DIR}:/data3
     expose:
       - 17878
-    networks: 
+    networks:
       webapps:
-        ipv4_address: 172.19.0.20  # static IP for in-app config
+        ipv4_address: 172.19.0.20 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
       - qbittorrent
       - radarr
     restart: unless-stopped
-  
+
   # music monitoring + management
   lidarr:
     image: linuxserver/lidarr:latest
@@ -148,7 +148,7 @@ services:
       - 8686
     networks:
       webapps:
-        ipv4_address: 172.19.0.12  # static IP for in-app config
+        ipv4_address: 172.19.0.12 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
@@ -176,7 +176,7 @@ services:
       - 9696
     networks:
       webapps:
-        ipv4_address: 172.19.0.10  # static IP for in-app config
+        ipv4_address: 172.19.0.10 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -205,7 +205,7 @@ services:
       - 6767
     networks:
       webapps:
-        ipv4_address: 172.19.0.11  # static IP for in-app config
+        ipv4_address: 172.19.0.11 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -231,7 +231,7 @@ services:
       - 5055
     networks:
       webapps:
-        ipv4_address: 172.19.0.7  # static IP for in-app config
+        ipv4_address: 172.19.0.7 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
@@ -253,7 +253,7 @@ services:
               capabilities: [gpu]
     networks:
       webapps:
-        ipv4_address: 172.19.0.13  # static IP for in-app config
+        ipv4_address: 172.19.0.13 # static IP for in-app config
     # healthcheck:
     #   test: wget --no-verbose --tries=1 --spider http://localhost:8265/ || exit 1
     #   interval: 5m00s
@@ -303,7 +303,7 @@ services:
       - 8191
     networks:
       webapps:
-        ipv4_address: 172.19.0.14  # static IP for in-app config
+        ipv4_address: 172.19.0.14 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
@@ -346,11 +346,11 @@ services:
       - wireguard-addresses
     networks:
       webapps:
-        ipv4_address: 172.19.0.15  # static IP for in-app config
+        ipv4_address: 172.19.0.15 # static IP for in-app config
     devices:
       - /dev/net/tun:/dev/net/tun
     labels:
-      - com.centurylinklabs.watchtower.enable=false  # manually update, so that network is up
+      - com.centurylinklabs.watchtower.enable=false # manually update, so that network is up
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -364,7 +364,7 @@ services:
       PGID: 65536
       TZ: America/New_York
       WEBUI_PORT: 8090
-      DOCKER_MODS: ghcr.io/gabe565/linuxserver-mod-vuetorrent  # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
+      DOCKER_MODS: ghcr.io/gabe565/linuxserver-mod-vuetorrent # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
     # healthcheck:
     #   test: >
     #     curl -i --header 'Referer: http://localhost:8090' --data 'username=${QBITTORRENT_USERNAME}&password=${QBITTORRENT_PASSWORD}' http://localhost:8090/api/v2/auth/login || exit 1
@@ -389,14 +389,14 @@ services:
     image: slskd/slskd:latest
     container_name: soulseek
     hostname: soulseek
-    expose: 
+    expose:
       - 5030
     ports:
       - 50300:50300/tcp
     environment:
-      - SLSKD_DOWNLOADS_DIR=/downloads
-      - SLSKD_INCOMPLETE_DIR=/incomplete
-      - SLSKD_UMASK=002
+      SLSKD_DOWNLOADS_DIR: /downloads
+      SLSKD_INCOMPLETE_DIR: /incomplete
+      SLSKD_UMASK: 002
     volumes:
       - soulseek_data:/app/data
       - soulseek_config:/app
@@ -408,7 +408,7 @@ services:
     user: 146:65536
     networks:
       webapps:
-        ipv4_address: 172.19.0.18  # static IP for in-app config
+        ipv4_address: 172.19.0.18 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -420,14 +420,14 @@ services:
     hostname: soularr
     user: 147:65536
     environment:
-      - TZ=America/New_York
-      - SCRIPT_INTERVAL=300
+      TZ: America/New_York
+      SCRIPT_INTERVAL: 300
     volumes:
       - ${DATA3_DIR}/music/downloads:/downloads
       - ${DOCKER_DIR}/soularr:/data
     networks:
       webapps:
-        ipv4_address: 172.19.0.19  # static IP for in-app config
+        ipv4_address: 172.19.0.19 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     depends_on:
@@ -449,7 +449,7 @@ services:
       - 8181
     networks:
       webapps:
-        ipv4_address: 172.19.0.16  # static IP for in-app config
+        ipv4_address: 172.19.0.16 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
