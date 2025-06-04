@@ -437,6 +437,26 @@ services:
       - soulseek
     restart: unless-stopped
 
+  # creates custom music playlists in Plex based on listening history, ratings, and more
+  meloday:
+    image: cozza38/meloday:latest
+    container_name: meloday
+    hostname: meloday
+    environment:
+      PUID: 149
+      PGID: 143
+      TZ: America/New_York
+    volumes:
+      - meloday_config:/config
+    networks:
+      meloday:
+        ipv4_address: 172.26.1.10
+    extra_hosts:
+      - "host.docker.internal:172.26.1.1"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
   # monitoring dashboard
   tautulli:
     image: linuxserver/tautulli:latest
@@ -471,8 +491,14 @@ volumes:
   soulseek_data:
   soulseek_config:
   tautulli_config:
+  meloday_config:
 
 networks:
   webapps:
     external: true
-    
+  meloday:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.26.0.0/16
+          gateway: 172.26.1.1
