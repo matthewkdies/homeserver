@@ -16,10 +16,13 @@ services:
     image: matthewkdies/football-pool:latest
     container_name: football-pool
     hostname: football-pool
-    labels:  # this is my own image, I'll know when I push and then pull it on my own
+    labels: # this is my own image, I'll know when I push and then pull it on my own
       - "com.centurylinklabs.watchtower.enable=false"
     expose:
       - 5600
+    environment:
+      PUID: 134
+      PGID: 134
     networks:
       webapps:
         ipv4_address: 172.19.0.5
@@ -42,7 +45,13 @@ services:
     mem_limit: 1g
     cpu_shares: 768
     healthcheck:
-      test: ["CMD", "sh", "-c", "pg_isready -q -d football-pool -U $(cat /run/secrets/db_user)"]
+      test:
+        [
+          "CMD",
+          "sh",
+          "-c",
+          "pg_isready -q -d football-pool -U $(cat /run/secrets/db_user)",
+        ]
       timeout: 45s
       interval: 10s
       retries: 10
@@ -55,7 +64,7 @@ services:
       POSTGRES_DB: football-pool
       POSTGRES_USER_FILE: /run/secrets/db_user
       POSTGRES_PASSWORD_FILE: /run/secrets/db_pass
-    networks: 
+    networks:
       - football-pool
     security_opt:
       - no-new-privileges:true
