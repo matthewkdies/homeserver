@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2025/08/19
+### Added
+- A [Maintainerr](https://docs.maintainerr.info/latest/) container used for creating rules that create collections within Plex marking content for deletion, eventually deleting them.
+
+
 ## [0.6.0] - 2025/06/04
 ### Added
 - A [Meloday](https://github.com/trackstacker/meloday) container used for automatically creating playlists for a Plex music library ([#35](https://github.com/matthewkdies/homeserver/issues/35)).
