@@ -19,6 +19,7 @@
 #   9. Usage of the soulseek network to get free-use music from other users (soulseek)
 #   10. Connection between Lidarr's wanted list and Soulseek container (soularr)
 #   11. Automatic creation of Plex music playlists based on listening habit (meloday)
+#   12. Deletion of content based on configurable rules (maintainerr)
 #
 # Unfortunately, I haven't been great at keeping helpful links as I go so far.
 # Those that I remember off the top of my head are listed below:
@@ -477,6 +478,31 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  # deletes content based on rules configured in a web GUI
+  maintainerr:
+    image: ghcr.io/jorenn92/maintainerr:latest
+    container_name: maintainerr
+    hostname: maintainerr
+    user: 150:65536
+    volumes:
+      - maintainerr_config:/opt/data
+    environment:
+      TZ: America/New_York
+    expose:
+      - 6246
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.21 # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - overseerr
+      - sonarr
+      - radarr
+      - radarr4k
+      - tautulli
+    restart: unless-stopped
+
 volumes:
   sonarr_config:
   radarr_config:
@@ -492,6 +518,7 @@ volumes:
   soulseek_config:
   tautulli_config:
   meloday_config:
+  maintainerr_config:
 
 networks:
   webapps:
