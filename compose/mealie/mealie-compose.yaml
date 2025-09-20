@@ -21,7 +21,7 @@ services:
     # mealie advises against using the latest tag
     # however, I like new features/bug fixes and I know how to debug
     # image: ghcr.io/mealie-recipes/mealie:latest
-    image: mealie-pwa-theme-fix:2.8.0
+    image: mealie-pwa-theme-fix:3.2.1
     build:
       # there's a bug that causes the PWA theme-color to not be respected:
       # https://github.com/mealie-recipes/mealie/issues/4563
@@ -29,8 +29,8 @@ services:
       context: ${COMPOSE_DIR}/mealie/mealie_source
       dockerfile: ${COMPOSE_DIR}/mealie/mealie_source/docker/Dockerfile
     container_name: mealie
-    labels:  # watchtower can't build images, so we'll ignore it
-      - "com.centurylinklabs.watchtower.enable=false"  # TODO: remove when issue is resolved
+    labels: # watchtower can't build images, so we'll ignore it
+      - "com.centurylinklabs.watchtower.enable=false" # TODO: remove when issue is resolved
     hostname: mealie
     # "Setting an explicit memory limit is recommended ... will improve idle performance"
     mem_limit: 4g
@@ -69,7 +69,7 @@ services:
       THEME_DARK_PRIMARY: 525E3C
       # OpenAI integration
       OPENAI_API_KEY_FILE: /run/secrets/OPENAI_API_KEY
-      OPENAI_MODEL: gpt-4o-mini  # upgrade to gpt-4o if needed
+      OPENAI_MODEL: gpt-4o-mini # upgrade to gpt-4o if needed
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
