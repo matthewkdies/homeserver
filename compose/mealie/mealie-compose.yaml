@@ -21,7 +21,7 @@ services:
     # mealie advises against using the latest tag
     # however, I like new features/bug fixes and I know how to debug
     # image: ghcr.io/mealie-recipes/mealie:latest
-    image: mealie-pwa-theme-fix:3.2.1
+    image: mealie-pwa-theme-fix:3.3.1
     build:
       # there's a bug that causes the PWA theme-color to not be respected:
       # https://github.com/mealie-recipes/mealie/issues/4563
