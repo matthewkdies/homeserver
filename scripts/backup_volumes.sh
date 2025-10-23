@@ -14,6 +14,7 @@
 set -e
 
 . /home/matthewkdies/.envvars
+. "${SCRIPTS_DIR}/global_functions.sh"
 
 LOG_FILE="${DOCKER_DIR}/log/backup.log"
 MAX_LOG_LINES=500
@@ -21,22 +22,7 @@ BACKUP_DIR="/mnt/backups"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 MAX_BACKUPS=3  # Number of backups to retain per volume
 
-# function: logs output to stdout and to the logfile
-log_msg() {
-    echo "$(date) - $1" | tee -a "${LOG_FILE}"
-}
-
-# function: keeps the logfile capped at a certain number of lines
-clean_log_file() {
-    NUM_LINES=$(wc -l "${LOG_FILE}" | awk '{ print $1 }')
-    if [ "${NUM_LINES}" -gt "${MAX_LOG_LINES}" ]; then
-        LINES_TO_DELETE=$((NUM_LINES - MAX_LOG_LINES))
-        sed -i "1,${LINES_TO_DELETE}d" "${LOG_FILE}"
-    fi
-}
-
-
-# function: remove the oldest backups until there are only MAX_BACKUPS backups remaining
+# remove the oldest backups until there are only MAX_BACKUPS backups remaining
 prune_old_backups() {
     local volume=$1
     local backups=( "${BACKUP_DIR}/${volume}_"*".tar.gz" )  # array of backups
@@ -44,7 +30,7 @@ prune_old_backups() {
     # only proceed if there are more backups than MAX_BACKUPS
     if (( ${#backups[@]} > MAX_BACKUPS )); then
         local to_delete_count=$(( ${#backups[@]} - MAX_BACKUPS ))
-        log_msg "Pruning ${to_delete_count} old backup(s) for ${volume}."
+        log_to_file "Pruning ${to_delete_count} old backup(s) for ${volume}." "${LOG_FILE}"
 
         # 🚨 -- 🤖 below! -- 🚨
         # finds the tarfiles for the current volume in the backup directory + prints timestamps
@@ -62,7 +48,7 @@ prune_old_backups() {
 
 # ensure backup directory exists (in case mount is lost)
 if ! mountpoint -q "${BACKUP_DIR}"; then
-    log_msg "ERROR: Backup directory is not mounted!"
+    log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
     exit 1
 fi
 
@@ -73,7 +59,7 @@ docker volume prune --force
 VOLUMES=$(docker volume ls --format "{{.Name}}")
 
 for VOLUME in $VOLUMES; do
-    log_msg "Backing up volume: ${VOLUME}."
+    log_to_file "Backing up volume: ${VOLUME}." "${LOG_FILE}"
 
     # create a temporary container and use it to archive the volume
     BACKUP_FILESTEM="${VOLUME}_${TIMESTAMP}"
@@ -86,6 +72,6 @@ for VOLUME in $VOLUMES; do
     prune_old_backups "${VOLUME}"  # clean old volumes
 done
 
-log_msg "Backups completed successfully!"
+log_to_file "Backups completed successfully!" "${LOG_FILE}"
 
-clean_log_file
+clean_log_file "${LOG_FILE}"
