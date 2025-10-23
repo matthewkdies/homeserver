@@ -16,9 +16,8 @@ set -e
 . /home/matthewkdies/.envvars
 . "${SCRIPTS_DIR}/global_functions.sh"
 
-LOG_FILE="${DOCKER_DIR}/log/backup.log"
-MAX_LOG_LINES=500
-BACKUP_DIR="/mnt/backups"
+LOG_FILE="${DOCKER_DIR}/log/backup_volumes.log"
+BACKUP_DIR="/mnt/backups/volumes"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
 MAX_BACKUPS=3  # Number of backups to retain per volume
 
@@ -47,7 +46,7 @@ prune_old_backups() {
 }
 
 # ensure backup directory exists (in case mount is lost)
-if ! mountpoint -q "${BACKUP_DIR}"; then
+if ! mountpoint -q "/mnt/backups"; then
     log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
     exit 1
 fi
