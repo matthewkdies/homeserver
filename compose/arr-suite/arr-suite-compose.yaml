@@ -42,7 +42,7 @@ secrets:
 services:
   # tv show monitoring + management
   sonarr:
-    image: linuxserver/sonarr:latest
+    image: linuxserver/sonarr:4.0.16
     container_name: sonarr
     hostname: sonarr
     environment:
@@ -72,7 +72,7 @@ services:
 
   # movie monitoring + management
   radarr:
-    image: linuxserver/radarr:latest
+    image: linuxserver/radarr:5.28.0
     container_name: radarr
     hostname: radarr
     environment:
@@ -101,7 +101,7 @@ services:
     restart: unless-stopped
 
   radarr4k:
-    image: linuxserver/radarr:latest
+    image: linuxserver/radarr:5.28.0
     container_name: radarr4k
     hostname: radarr4k
     environment:
@@ -131,7 +131,7 @@ services:
 
   # music monitoring + management
   lidarr:
-    image: linuxserver/lidarr:latest
+    image: linuxserver/lidarr:3.0.1
     container_name: lidarr
     hostname: lidarr
     environment:
@@ -161,7 +161,7 @@ services:
 
   # torrent client monitoring + management
   prowlarr:
-    image: linuxserver/prowlarr:latest
+    image: linuxserver/prowlarr:2.1.5
     container_name: prowlarr
     hostname: prowlarr
     environment:
@@ -187,7 +187,7 @@ services:
 
   # subtitle monitoring + management
   bazarr:
-    image: linuxserver/bazarr:latest
+    image: linuxserver/bazarr:1.5.3
     container_name: bazarr
     hostname: bazarr
     environment:
@@ -216,7 +216,7 @@ services:
 
   # content request monitoring + management
   overseerr:
-    image: linuxserver/overseerr
+    image: linuxserver/overseerr:1.34.0
     container_name: overseerr
     hostname: overseerr
     environment:
@@ -245,7 +245,7 @@ services:
 
   # transcoding of video files
   tdarr:
-    image: ghcr.io/haveagitgat/tdarr:latest
+    image: ghcr.io/haveagitgat/tdarr:2.51.03
     container_name: tdarr
     hostname: tdarr
     deploy:
@@ -292,7 +292,7 @@ services:
 
   # helps to bypass Cloudflare protection used by many indexers
   flaresolverr:
-    image: flaresolverr/flaresolverr:latest
+    image: flaresolverr/flaresolverr:v3.4.4
     container_name: flaresolverr
     hostname: flaresolverr
     environment:
@@ -316,7 +316,7 @@ services:
 
   # VPN client container
   gluetun:
-    image: qmcgaw/gluetun:v3
+    image: qmcgaw/gluetun:v3.40.0
     container_name: gluetun
     hostname: gluetun
     cap_add:
@@ -361,7 +361,7 @@ services:
 
   # torrenting client
   qbittorrent:
-    image: linuxserver/qbittorrent:latest
+    image: linuxserver/qbittorrent:5.1.2
     container_name: qbittorrent
     environment:
       PUID: 142
@@ -390,7 +390,7 @@ services:
 
   # connects to the soulseek network to download royalty-free music
   soulseek:
-    image: slskd/slskd:latest
+    image: slskd/slskd:0.24.0
     container_name: soulseek
     hostname: soulseek
     expose:
@@ -419,7 +419,7 @@ services:
 
   # links lidarr to soulseek, starting downloads and running manual imports
   soularr:
-    image: mrusse08/soularr:latest
+    image: mrusse08/soularr:latest # TODO: is there an "official" image nowadays?
     container_name: soularr
     hostname: soularr
     user: 147:65536
@@ -440,7 +440,7 @@ services:
 
   # creates custom music playlists in Plex based on listening history, ratings, and more
   meloday:
-    image: cozza38/meloday:latest
+    image: cozza38/meloday:latest # TODO: is there an "official" image nowadays?
     container_name: meloday
     hostname: meloday
     environment:
@@ -460,7 +460,7 @@ services:
 
   # monitoring dashboard
   tautulli:
-    image: linuxserver/tautulli:latest
+    image: linuxserver/tautulli:2.16.0
     container_name: tautulli
     hostname: tautulli
     environment:
@@ -480,7 +480,7 @@ services:
 
   # deletes content based on rules configured in a web GUI
   maintainerr:
-    image: ghcr.io/jorenn92/maintainerr:latest
+    image: ghcr.io/jorenn92/maintainerr:2.19.0
     container_name: maintainerr
     hostname: maintainerr
     user: 150:65536

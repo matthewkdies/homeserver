@@ -12,11 +12,11 @@ secrets:
 
 services:
   lubelogger:
-    image: ghcr.io/hargata/lubelogger:latest
+    image: ghcr.io/hargata/lubelogger:v1.5.3
     container_name: lubelogger
     hostname: lubelogger
-    entrypoint: [ "/docker-entrypoint.sh" ]
-    command: [ "./CarCareTracker" ]
+    entrypoint: ["/docker-entrypoint.sh"]
+    command: ["./CarCareTracker"]
     volumes:
       - lubelogger_data:/App/data
       - lubelogger_keys:/root/.aspnet/DataProtection-Keys
