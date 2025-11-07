@@ -1,0 +1,29 @@
+# ------------------------------------------------------------------------------------
+# TODO: these docs
+# TODO: have to convert all "latest" tags to version numbers
+# TODO: disable watchtower
+# TODO: figure out the restart policy, or automate as a cron job?
+# ------------------------------------------------------------------------------------
+
+secrets:
+  github_pat:
+    file: ${SECRETS_DIR}/renovate_github_pat
+
+services:
+  renovate:
+    image: renovate/renovate:42.0.1
+    container_name: renovate
+    hostname: renovate
+    entrypoint:
+      ["/docker-entrypoint.sh", "/usr/local/sbin/renovate-entrypoint.sh"]
+    labels: # watchtower can't build images, so we'll build it with a script
+      - "com.centurylinklabs.watchtower.enable=false"
+    # environment:
+    volumes:
+      - ${COMPOSE_DIR}/renovate/config.js:/usr/src/app/config.js
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh
+    secrets:
+      - github_pat
+    security_opt:
+      - no-new-privileges:true
+    # restart: unless-stopped
