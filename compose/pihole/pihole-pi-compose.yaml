@@ -4,7 +4,7 @@ secrets:
 
 services:
   pihole:
-    image: pihole/pihole:latest
+    image: pihole/pihole:2025.11.0
     container_name: pihole
     hostname: pihole-pi
     secrets:
