@@ -44,6 +44,7 @@ services:
     volumes:
       - plex_config:/config
       - ${DATA_DIR}/media:/data/media
+      - ${DATA2_DIR}/media:/data2/media
       - ${DATA3_DIR}/media:/data3/media
       - /dev/shm:/transcode # use the RAM for transcoding, to save the SSD from wear and tear
     security_opt:

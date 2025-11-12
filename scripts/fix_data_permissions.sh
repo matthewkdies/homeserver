@@ -30,4 +30,4 @@ set_permissions() {
 }
 
 source /home/matthewkdies/.envvars
-set_permissions "${DATA_DIR}" "${DATA3_DIR}"
+set_permissions "${DATA_DIR}" "${DATA3_DIR}" "${DATA2_DIR}"

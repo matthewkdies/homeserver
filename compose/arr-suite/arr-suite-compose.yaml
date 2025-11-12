@@ -58,6 +58,7 @@ services:
     volumes:
       - sonarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
     expose:
       - 8989
@@ -88,6 +89,7 @@ services:
     volumes:
       - radarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
     expose:
       - 7878
@@ -147,6 +149,7 @@ services:
     volumes:
       - lidarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
     expose:
       - 8686
@@ -203,6 +206,7 @@ services:
     volumes:
       - bazarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
       - ${COMPOSE_DIR}/arr-suite/bazarr-subcleaner:/subcleaner
     expose:
@@ -282,6 +286,7 @@ services:
     volumes:
       - tdarr_config:/app
       - ${DATA_DIR}/media:/media
+      - ${DATA2_DIR}/media:/media2
       - ${DATA3_DIR}/media:/media3
       - ${DOCKER_DIR}/tdarr/transcode:/transcode
     devices:
@@ -379,6 +384,7 @@ services:
     volumes:
       - qbittorrent_config:/config
       - ${DATA_DIR}/torrents:/data/torrents
+      - ${DATA2_DIR}/torrents:/data2/torrents
       - ${DATA3_DIR}/torrents:/data3/torrents
     network_mode: service:gluetun # run on the vpn network from above gluetun container
     depends_on:
@@ -407,6 +413,7 @@ services:
       - ${DATA3_DIR}/music/downloads:/downloads
       - ${DATA3_DIR}/music/incomplete:/incomplete
       - ${DATA_DIR}/media/music:/music
+      - ${DATA2_DIR}/media/music:/music2
       - ${DATA3_DIR}/media/music:/music3
       - ${DOCKER_DIR}/soulseek/slskd.yml:/app/slskd.yml
     user: 146:65536
