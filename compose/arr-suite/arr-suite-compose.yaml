@@ -284,11 +284,13 @@ services:
       NVIDIA_DRIVER_CAPABILITIES: all
       NVIDIA_VISIBLE_DEVICES: all
     volumes:
-      - tdarr_config:/app
+      - ${DOCKER_DIR}/tdarr/server:/app/server
+      - ${DOCKER_DIR}/tdarr/configs:/app/configs
+      - ${DOCKER_DIR}/tdarr/logs:/app/logs
+      - ${DOCKER_DIR}/tdarr/transcode:/transcode
       - ${DATA_DIR}/media:/media
       - ${DATA2_DIR}/media:/media2
       - ${DATA3_DIR}/media:/media3
-      - ${DOCKER_DIR}/tdarr/transcode:/transcode
     devices:
       - /dev/dri:/dev/dri
     security_opt:
@@ -518,7 +520,6 @@ volumes:
   prowlarr_config:
   bazarr_config:
   overseerr_config:
-  tdarr_config:
   gluetun_config:
   qbittorrent_config:
   soulseek_data:
