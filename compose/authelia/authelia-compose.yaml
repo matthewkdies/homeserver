@@ -6,7 +6,7 @@
 #
 # Helpful links:
 #  - https://www.smarthomebeginner.com/authelia-docker-compose-guide-2024-v2/
-#  - https://www.authelia.com/configuration/prologue/introduction/ 
+#  - https://www.authelia.com/configuration/prologue/introduction/
 # ------------------------------------------------------------------------
 
 # we're going to use secrets, to improve on the security. security by design!
@@ -19,6 +19,8 @@ secrets:
     file: ${SECRETS_DIR}/authelia_storage_encryption_key
   authelia_notifier_smtp_password:
     file: ${SECRETS_DIR}/authelia_notifier_smtp_password
+  authelia_identity_providers_oidc_hmac_secret:
+    file: ${SECRETS_DIR}/authelia_identity_providers_oidc_hmac_secret
 
 services:
   authelia:
@@ -33,6 +35,7 @@ services:
       PUID: 128
       PGID: 129
       AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
+      AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_providers_oidc_hmac_secret
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
       AUTHELIA_NOTIFIER_SMTP_USERNAME: ${GMAIL} # SMTP
@@ -42,11 +45,12 @@ services:
       - authelia_storage_encryption_key
       - authelia_session_secret
       - authelia_notifier_smtp_password
+      - authelia_identity_providers_oidc_hmac_secret
     security_opt:
       - no-new-privileges:true
     networks:
       webapps:
-        ipv4_address: 172.19.0.2  # give it a static IP so we can create set vars elsewhere
+        ipv4_address: 172.19.0.2 # give it a static IP so we can create set vars elsewhere
 
     restart: unless-stopped
 
