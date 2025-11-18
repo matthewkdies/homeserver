@@ -8,6 +8,12 @@
 #  - https://github.com/actualbudget/actual-server/blob/master/docker-compose.yml
 # -------------------------------------------------------------------------------------
 
+secrets:
+  ACTUAL_OPENID_CLIENT_ID:
+    file: ${SECRETS_DIR}/actual_openid_client_id
+  ACTUAL_OPENID_CLIENT_SECRET:
+    file: ${SECRETS_DIR}/actual_openid_client_secret
+
 services:
   actual_server:
     image: actualbudget/actual-server:latest
@@ -17,18 +23,24 @@ services:
     volumes:
       - ${DOCKER_DIR}/actual:/data
       - ${COMPOSE_DIR}/actual/healthcheck.js:/healthcheck.js
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh
     environment:
       ACTUAL_LOGIN_METHOD: openid
       ACTUAL_TRUSTED_AUTH_PROXIES: 172.19.0.2
       ACTUAL_OPENID_DISCOVERY_URL: "https://auth.mattdies.com/.well-known/openid-configuration"
       ACTUAL_OPENID_SERVER_HOSTNAME: "https://actual.mattdies.com"
       ACTUAL_OPENID_AUTH_METHOD: "oauth2"
+    entrypoint: ["/docker-entrypoint.sh", "/usr/bin/tini", "-g", "--"]
+    command: ["node", "app.js"]
     healthcheck:
       test: node /healthcheck.js || exit 1
       interval: 5m00s
       timeout: 10s
       retries: 2
       start_period: 60s
+    secrets:
+      - ACTUAL_OPENID_CLIENT_ID
+      - ACTUAL_OPENID_CLIENT_SECRET
     security_opt:
       - no-new-privileges:true
     networks:
