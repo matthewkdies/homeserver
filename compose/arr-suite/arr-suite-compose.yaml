@@ -1,8 +1,8 @@
 # ----------------------------------------------------------------------------------------
 # The below containers all serve to supplement and automate a lot of Plex management.
 # For this reason, the Plex compose is kept separate, so that changes to these services
-# won't affect the availability of Plex itself. 
-# 
+# won't affect the availability of Plex itself.
+#
 # The current capabilities of this stack:
 #   1. Handling Plex users' content requests (overseerr)
 #   2. Creation of a VPN container that uses my Mullvad account (gluetun)
@@ -16,7 +16,11 @@
 #   6. Automated fetching of subtitles for media (bazarr)
 #   7. Transcoding of video media to meet custom-set specifications (tdarr)
 #   8. Plex activity monitoring (tautilli)
-# 
+#   9. Usage of the soulseek network to get free-use music from other users (soulseek)
+#   10. Connection between Lidarr's wanted list and Soulseek container (soularr)
+#   11. Automatic creation of Plex music playlists based on listening habit (meloday)
+#   12. Deletion of content based on configurable rules (maintainerr)
+#
 # Unfortunately, I haven't been great at keeping helpful links as I go so far.
 # Those that I remember off the top of my head are listed below:
 #   - https://trash-guides.info/: Helpful guides for configuring media management clients
@@ -54,14 +58,17 @@ services:
     volumes:
       - sonarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
     expose:
       - 8989
     networks:
       webapps:
-        ipv4_address: 172.19.0.9  # static IP for in-app config
+        ipv4_address: 172.19.0.9 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
 
   # movie monitoring + management
@@ -82,16 +89,48 @@ services:
     volumes:
       - radarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
     expose:
       - 7878
-    networks: 
+    networks:
       webapps:
-        ipv4_address: 172.19.0.8  # static IP for in-app config
+        ipv4_address: 172.19.0.8 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
-  
+
+  radarr4k:
+    image: linuxserver/radarr:latest
+    container_name: radarr4k
+    hostname: radarr4k
+    environment:
+      PUID: 136
+      PGID: 65536
+      TZ: America/New_York
+    # healthcheck:
+    #   test: curl -f http://localhost:7878/api/v3/health?apikey=${RADARR_4K_API_KEY} || exit 1
+    #   interval: 5m00s
+    #   timeout: 10s
+    #   retries: 2
+    #   start_period: 30s
+    volumes:
+      - radarr4k_config:/config
+      - ${DATA3_DIR}:/data3
+    expose:
+      - 17878
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.20 # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - qbittorrent
+      - radarr
+    restart: unless-stopped
+
   # music monitoring + management
   lidarr:
     image: linuxserver/lidarr:latest
@@ -110,14 +149,17 @@ services:
     volumes:
       - lidarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
     expose:
       - 8686
     networks:
       webapps:
-        ipv4_address: 172.19.0.12  # static IP for in-app config
+        ipv4_address: 172.19.0.12 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      - qbittorrent
     restart: unless-stopped
 
   # torrent client monitoring + management
@@ -141,7 +183,7 @@ services:
       - 9696
     networks:
       webapps:
-        ipv4_address: 172.19.0.10  # static IP for in-app config
+        ipv4_address: 172.19.0.10 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -164,13 +206,14 @@ services:
     volumes:
       - bazarr_config:/config
       - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
       - ${DATA3_DIR}:/data3
       - ${COMPOSE_DIR}/arr-suite/bazarr-subcleaner:/subcleaner
     expose:
       - 6767
     networks:
       webapps:
-        ipv4_address: 172.19.0.11  # static IP for in-app config
+        ipv4_address: 172.19.0.11 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -196,9 +239,12 @@ services:
       - 5055
     networks:
       webapps:
-        ipv4_address: 172.19.0.7  # static IP for in-app config
+        ipv4_address: 172.19.0.7 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      - sonarr
+      - radarr
     restart: unless-stopped
 
   # transcoding of video files
@@ -215,7 +261,7 @@ services:
               capabilities: [gpu]
     networks:
       webapps:
-        ipv4_address: 172.19.0.13  # static IP for in-app config
+        ipv4_address: 172.19.0.13 # static IP for in-app config
     # healthcheck:
     #   test: wget --no-verbose --tries=1 --spider http://localhost:8265/ || exit 1
     #   interval: 5m00s
@@ -238,10 +284,13 @@ services:
       NVIDIA_DRIVER_CAPABILITIES: all
       NVIDIA_VISIBLE_DEVICES: all
     volumes:
-      - tdarr_config:/app
-      - ${DATA_DIR}/media:/media
-      - ${DATA3_DIR}/media:/media3
+      - ${DOCKER_DIR}/tdarr/server:/app/server
+      - ${DOCKER_DIR}/tdarr/configs:/app/configs
+      - ${DOCKER_DIR}/tdarr/logs:/app/logs
       - ${DOCKER_DIR}/tdarr/transcode:/transcode
+      - ${DATA_DIR}/media:/media
+      - ${DATA2_DIR}/media:/media2
+      - ${DATA3_DIR}/media:/media3
     devices:
       - /dev/dri:/dev/dri
     security_opt:
@@ -265,9 +314,11 @@ services:
       - 8191
     networks:
       webapps:
-        ipv4_address: 172.19.0.14  # static IP for in-app config
+        ipv4_address: 172.19.0.14 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      - prowlarr
     restart: unless-stopped
 
   # VPN client container
@@ -306,11 +357,11 @@ services:
       - wireguard-addresses
     networks:
       webapps:
-        ipv4_address: 172.19.0.15  # static IP for in-app config
+        ipv4_address: 172.19.0.15 # static IP for in-app config
     devices:
       - /dev/net/tun:/dev/net/tun
     labels:
-      - com.centurylinklabs.watchtower.enable=false  # manually update, so that network is up
+      - com.centurylinklabs.watchtower.enable=false # manually update, so that network is up
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
@@ -324,7 +375,7 @@ services:
       PGID: 65536
       TZ: America/New_York
       WEBUI_PORT: 8090
-      DOCKER_MODS: ghcr.io/gabe565/linuxserver-mod-vuetorrent  # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
+      DOCKER_MODS: ghcr.io/gabe565/linuxserver-mod-vuetorrent # https://github.com/arafatamim/linuxserver-io-mod-vuetorrent/issues/8
     # healthcheck:
     #   test: >
     #     curl -i --header 'Referer: http://localhost:8090' --data 'username=${QBITTORRENT_USERNAME}&password=${QBITTORRENT_PASSWORD}' http://localhost:8090/api/v2/auth/login || exit 1
@@ -335,6 +386,7 @@ services:
     volumes:
       - qbittorrent_config:/config
       - ${DATA_DIR}/torrents:/data/torrents
+      - ${DATA2_DIR}/torrents:/data2/torrents
       - ${DATA3_DIR}/torrents:/data3/torrents
     network_mode: service:gluetun # run on the vpn network from above gluetun container
     depends_on:
@@ -344,10 +396,82 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  # connects to the soulseek network to download royalty-free music
+  soulseek:
+    image: slskd/slskd:latest
+    container_name: soulseek
+    hostname: soulseek
+    expose:
+      - 5030
+    ports:
+      - 50300:50300/tcp
+    environment:
+      SLSKD_DOWNLOADS_DIR: /downloads
+      SLSKD_INCOMPLETE_DIR: /incomplete
+      SLSKD_UMASK: 002
+    volumes:
+      - soulseek_data:/app/data
+      - soulseek_config:/app
+      - ${DATA3_DIR}/music/downloads:/downloads
+      - ${DATA3_DIR}/music/incomplete:/incomplete
+      - ${DATA_DIR}/media/music:/music
+      - ${DATA2_DIR}/media/music:/music2
+      - ${DATA3_DIR}/media/music:/music3
+      - ${DOCKER_DIR}/soulseek/slskd.yml:/app/slskd.yml
+    user: 146:65536
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.18 # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  # links lidarr to soulseek, starting downloads and running manual imports
+  soularr:
+    image: mrusse08/soularr:latest
+    container_name: soularr
+    hostname: soularr
+    user: 147:65536
+    environment:
+      TZ: America/New_York
+      SCRIPT_INTERVAL: 300
+    volumes:
+      - ${DATA3_DIR}/music/downloads:/downloads
+      - ${DOCKER_DIR}/soularr:/data
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.19 # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - soulseek
+    restart: unless-stopped
+
+  # creates custom music playlists in Plex based on listening history, ratings, and more
+  meloday:
+    image: cozza38/meloday:latest
+    container_name: meloday
+    hostname: meloday
+    environment:
+      PUID: 149
+      PGID: 143
+      TZ: America/New_York
+    volumes:
+      - meloday_config:/config
+    networks:
+      meloday:
+        ipv4_address: 172.26.1.10
+    extra_hosts:
+      - "host.docker.internal:172.26.1.1"
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
   # monitoring dashboard
   tautulli:
     image: linuxserver/tautulli:latest
     container_name: tautulli
+    hostname: tautulli
     environment:
       PUID: 143
       PGID: 137
@@ -358,24 +482,58 @@ services:
       - 8181
     networks:
       webapps:
-        ipv4_address: 172.19.0.16  # static IP for in-app config
+        ipv4_address: 172.19.0.16 # static IP for in-app config
     security_opt:
       - no-new-privileges:true
+    restart: unless-stopped
+
+  # deletes content based on rules configured in a web GUI
+  maintainerr:
+    image: ghcr.io/jorenn92/maintainerr:latest
+    container_name: maintainerr
+    hostname: maintainerr
+    user: 150:65536
+    volumes:
+      - maintainerr_config:/opt/data
+    environment:
+      TZ: America/New_York
+    expose:
+      - 6246
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.21 # static IP for in-app config
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - overseerr
+      - sonarr
+      - radarr
+      - radarr4k
+      - tautulli
     restart: unless-stopped
 
 volumes:
   sonarr_config:
   radarr_config:
+  radarr4k_config:
   lidarr_config:
   prowlarr_config:
   bazarr_config:
   overseerr_config:
-  tdarr_config:
   gluetun_config:
   qbittorrent_config:
+  soulseek_data:
+  soulseek_config:
   tautulli_config:
+  meloday_config:
+  maintainerr_config:
 
 networks:
   webapps:
     external: true
-    
+  meloday:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.26.0.0/16
+          gateway: 172.26.1.1

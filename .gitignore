@@ -10,6 +10,7 @@ fail2ban
 
 # other git repos
 compose/arr-suite/bazarr-subcleaner
+compose/arr-suite/vuetorrent
 compose/football-pool/football-pool
 compose/mealie/mealie_source
 compose/arr-suite/vuetorrent

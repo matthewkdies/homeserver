@@ -38,6 +38,7 @@
 (cloudflare_dns) {
 	tls {
         dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+		resolvers 1.1.1.1 1.1.1.2
     }
 }
 
@@ -67,7 +68,6 @@
 
 # Serve Apps
 
-# authelia
 auth.mattdies.com {
 	import local_network_only
 	import cloudflare_dns
@@ -75,7 +75,6 @@ auth.mattdies.com {
 	reverse_proxy authelia:9091
 }
 
-# mealie
 mealie.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "mealie"
@@ -83,18 +82,16 @@ mealie.mattdies.com {
 	reverse_proxy mealie:9000
 }
 
-# actual
 actual.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "actual"
 	reverse_proxy actual:5006 {
-		header_up x-actual-password {env.ACTUAL_PASSWORD}
+		header_up x-actual-password "{env.ACTUAL_PASSWORD}"
 	}
 }
 
-# plex
 plex.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
@@ -102,7 +99,6 @@ plex.mattdies.com {
 	reverse_proxy 192.168.1.102:32400
 }
 
-# sonarr
 sonarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -111,7 +107,6 @@ sonarr.mattdies.com {
 	reverse_proxy sonarr:8989
 }
 
-# radarr
 radarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -120,7 +115,14 @@ radarr.mattdies.com {
 	reverse_proxy radarr:7878
 }
 
-# lidarr
+radarr4k.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "radarr4k"
+	reverse_proxy radarr4k:17878
+}
+
 lidarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -129,7 +131,6 @@ lidarr.mattdies.com {
 	reverse_proxy lidarr:8686
 }
 
-# prowlarr
 prowlarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -138,7 +139,6 @@ prowlarr.mattdies.com {
 	reverse_proxy prowlarr:9696
 }
 
-# bazarr
 bazarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -147,14 +147,12 @@ bazarr.mattdies.com {
 	reverse_proxy bazarr:6767
 }
 
-# overseerr
 overseerr.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "overseerr"
 	reverse_proxy overseerr:5055
 }
 
-# tdarr
 tdarr.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -163,7 +161,6 @@ tdarr.mattdies.com {
 	reverse_proxy tdarr:8265
 }
 
-# vuetorrent
 vuetorrent.mattdies.com {
 	import use_authelia
 	import cloudflare_dns
@@ -172,7 +169,17 @@ vuetorrent.mattdies.com {
 	reverse_proxy gluetun:8090
 }
 
-# tautulli
+soulseek.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "soulseek"
+	reverse_proxy soulseek:5030 {
+		header_up Upgrade "websocket"
+        header_up Connection "Upgrade"
+	}
+}
+
 tautulli.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
@@ -180,7 +187,14 @@ tautulli.mattdies.com {
 	reverse_proxy tautulli:8181
 }
 
-# pihole-nas
+maintainerr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "maintainerr"
+	reverse_proxy maintainerr:6246
+}
+
 pihole-nas.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
@@ -189,7 +203,6 @@ pihole-nas.mattdies.com {
 	rewrite / /admin
 }
 
-# pihole-pi
 pihole-pi.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
@@ -198,7 +211,6 @@ pihole-pi.mattdies.com {
 	rewrite / /admin
 }
 
-# nas
 nas.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
@@ -211,7 +223,18 @@ nas.mattdies.com {
 	}
 }
 
-# router
+nas-backup.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "nas-backup"
+	reverse_proxy 192.168.1.101:50382 {
+		transport http {
+			tls
+			tls_insecure_skip_verify
+		}
+	}
+}
+
 router.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
@@ -224,9 +247,24 @@ router.mattdies.com {
 	}
 }
 
-# footballpool
 footballpool.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "footballpool"
 	reverse_proxy football-pool:5600
+}
+
+lubelogger.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "lubelogger"
+	reverse_proxy lubelogger:8080
+}
+
+kcal.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "kcal"
+	reverse_proxy kcal-nginx:10081
 }

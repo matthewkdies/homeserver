@@ -1,7 +1,16 @@
 These are scripts that I use regularly.
 Most of them are just standard use things for convenience, but some are used inside of containers.
 For example, the `set_secret_vars.sh` script is used in multiple containers as a custom entrypoint.
-The `update_caddy.sh` script also runs as a `cron` job on my machine, as I build my own image and want it up to date.
+
+A notable script is the [`global_functions.sh`](./global_functions.sh), which I load in other files.
+It contains some helpful functions for logging, and may grow over time.
+
+A few of my scripts run as `cron` jobs. These include:
+
+- [`backup_volumes.sh`](./backup_volumes.sh): Backs up all Docker volumes to a mounted drive.
+- [`backup_system.sh`](./backup_system.sh): Backs up the machine itself to a mounted drive.
+- [`fix_data_permissions.sh`](./fix_data_permissions.sh): Fixes the permissions on the directories in which I store content.
+- [`update_caddy.sh`](./update_caddy.sh): Updates my `caddy` image, since I build my own image and want it up to date.
 
 Now if you'll excuse me, I'm needed Downtown:
 ```

@@ -13,19 +13,20 @@ secrets:
 
 services:
   pihole:
-    image: pihole/pihole:latest
+    image: pihole/pihole:2025.11.0
     container_name: pihole
     hostname: pihole-nas
     secrets:
       - pihole-webpassword
     environment:
+      TZ: America/New_York
       PIHOLE_UID: 1028
       PIHOLE_GID: 65536
-      TZ: America/New_York
       WEBPASSWORD_FILE: /run/secrets/pihole-webpassword
-      DNSMASQ_LISTENING: local
-      WEB_PORT: 8000
-      DNSMASQ_USER: pihole
+      FTLCONF_dns_upstreams: 9.9.9.9;149.112.112.112
+      FTLCONF_dns_listeningMode: local
+      FTLCONF_webserver_port: 8000
+      FTLCONF_misc_etc_dnsmasq_d: true
     volumes:
       - /volume1/docker/pihole/dnsmasq.d:/etc/dnsmasq.d
       - /volume1/docker/pihole/pihole:/etc/pihole
