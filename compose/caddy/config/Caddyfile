@@ -31,7 +31,7 @@
 }
 
 (local_network_only) {
-	@external not remote_ip 192.168.1.0/24
+	@external not remote_ip 192.168.1.0/24 172.19.0.0/16
 	respond @external 403
 }
 

@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2025/11/18
+### Fixed
+- The Docker network is now considered allowed for the `local_network_only` snippet in the Caddyfile, making OpenID Connect authentication possible with Authelia.
+
 ## [0.9.1] - 2025/11/17
 ### Fixed
 - To resolve a compatibility issue with the Docker API version, the image used for Watchtower was changed to a fork of the original project.
