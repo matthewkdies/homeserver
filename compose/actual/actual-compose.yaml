@@ -10,7 +10,7 @@
 
 services:
   actual_server:
-    image: docker.io/actualbudget/actual-server:latest
+    image: actualbudget/actual-server:latest
     container_name: actual
     expose:
       - 5006
@@ -18,8 +18,11 @@ services:
       - ${DOCKER_DIR}/actual:/data
       - ${COMPOSE_DIR}/actual/healthcheck.js:/healthcheck.js
     environment:
-      ACTUAL_LOGIN_METHOD: header
+      ACTUAL_LOGIN_METHOD: openid
       ACTUAL_TRUSTED_AUTH_PROXIES: 172.19.0.2
+      ACTUAL_OPENID_DISCOVERY_URL: "https://auth.mattdies.com/.well-known/openid-configuration"
+      ACTUAL_OPENID_SERVER_HOSTNAME: "https://actual.mattdies.com"
+      ACTUAL_OPENID_AUTH_METHOD: "oauth2"
     healthcheck:
       test: node /healthcheck.js || exit 1
       interval: 5m00s
@@ -36,4 +39,3 @@ services:
 networks:
   webapps:
     external: true
-
