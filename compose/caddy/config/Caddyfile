@@ -83,13 +83,10 @@ mealie.mattdies.com {
 }
 
 actual.mattdies.com {
-	import use_authelia
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "actual"
-	reverse_proxy actual:5006 {
-		header_up x-actual-password "{env.ACTUAL_PASSWORD}"
-	}
+	reverse_proxy actual:5006
 }
 
 plex.mattdies.com {

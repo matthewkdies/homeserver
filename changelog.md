@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.10.0] - 2025/11/18
 ### Added
 - OpenID Connect authentication to Authelia.
+  - Configured Actual to use Authelia OIDC.
 
 ### Fixed
 - The Docker network is now considered allowed for the `local_network_only` snippet in the Caddyfile, making OpenID Connect authentication possible with Authelia.
