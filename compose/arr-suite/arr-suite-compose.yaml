@@ -512,6 +512,27 @@ services:
       - tautulli
     restart: unless-stopped
 
+  # # generates summaries, like a certain music streaming service every year
+  # wrapperr:
+  #   image: ghcr.io/aunefyren/wrapperr:latest
+  #   container_name: wrapperr
+  #   hostname: wrapperr
+  #   # user: 150:65536
+  #   # volumes:
+  #   #   - maintainerr_config:/opt/data
+  #   environment:
+  #     TZ: America/New_York
+  #   expose:
+  #     - 8282
+  #   networks:
+  #     webapps:
+  #       ipv4_address: 172.19.0.22 # static IP for in-app config
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   depends_on:
+  #     - tautulli
+  #   restart: unless-stopped
+
 volumes:
   sonarr_config:
   radarr_config:
