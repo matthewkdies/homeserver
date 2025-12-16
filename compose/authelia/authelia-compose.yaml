@@ -25,7 +25,7 @@ secrets:
 services:
   authelia:
     container_name: authelia
-    image: authelia/authelia:4.39.11
+    image: authelia/authelia:4.39.15
     expose:
       - 9091
     volumes:
