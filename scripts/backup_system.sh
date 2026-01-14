@@ -19,7 +19,7 @@ set -e
 LOG_FILE="${DOCKER_DIR}/log/backup_system.log"
 BACKUP_DIR="/mnt/backups/system"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-MAX_BACKUPS=7  # Number of backups to retain per volume
+MAX_BACKUPS=7  # Number of backups to retain for the system
 
 # TODO: rethink cleanup logic
 # remove the oldest backups until there are only MAX_BACKUPS backups remaining
@@ -58,7 +58,7 @@ log_to_file "Beginning system backup at ${TIMESTAMP}." "${LOG_FILE}"
 # hey, I'm not paranoid, you're paranoid!
 TEMP_BACKUP="${BACKUP_DIR}/.system_backup_${TIMESTAMP}.tar.gz.tmp"
 FINAL_BACKUP="${BACKUP_DIR}/system_backup_${TIMESTAMP}.tar.gz"
-tar -cpzf "${BACKUP_DIR}/system_backup_${TIMESTAMP}.tar.gz" --exclude={"/proc","/sys","/dev","/mnt","/media","/run","/lost+found","/var/lib/docker"} /  2>/dev/null
+tar -cpzf "${TEMP_BACKUP}" --exclude={"/proc","/sys","/dev","/mnt","/media","/run","/lost+found","/var/lib/docker"} /  2>/dev/null
 mv "${TEMP_BACKUP}" "${FINAL_BACKUP}"
 rm "${TEMP_BACKUP}"
 
