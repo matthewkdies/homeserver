@@ -274,8 +274,10 @@ lubelogger.mattdies.com {
 # 	reverse_proxy kcal-nginx:10081
 # }
 
+immich.mattdies.com {
+	# import use_authelia
 	import cloudflare_dns
 	import local_network_only
-	import log_for_app "kcal"
-	reverse_proxy kcal-nginx:10081
+	import log_for_app "immich"
+	reverse_proxy immich:2283
 }
