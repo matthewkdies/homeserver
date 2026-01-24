@@ -1,0 +1,104 @@
+# ---------------------------------------------------------------------------------------
+# Immich is a self-hosted image and video management application.
+# It offers a lot of cool features like hardware acceleration, face
+# recognition, geocoding, and more. It's seriously really really
+# cool and borderline rivals Google Photos. Plus it isn't mining every
+# single detail about your life, so that's a plus as well.
+
+# To install Immich I followed this guide: https://docs.immich.app/install/docker-compose
+# ---------------------------------------------------------------------------------------
+
+name: immich
+
+secrets:
+  immich-postgres-user:
+    file: ${SECRETS_DIR}/immich_postgres_user
+  immich-postgres-password:
+    file: ${SECRETS_DIR}/immich_postgres_password
+
+services:
+  immich-server:
+    image: ghcr.io/immich-app/immich-server:${IMMICH_VERSION:-release}
+    container_name: immich_server
+    hostname: immich
+    expose:
+      - 2283
+    depends_on:
+      - redis
+      - database
+    env_file:
+      - .env
+    environment:
+      DB_USERNAME_FILE: /run/secrets/immich-postgres-user
+      DB_PASSWORD_FILE: /run/secrets/immich-postgres-password
+    # extends:  # I don't want this because the quality of the transcoded videos are reduces
+    #   file: hwaccel.transcoding.yaml
+    #   service: cpu # set to one of [nvenc, quicksync, rkmpp, vaapi, vaapi-wsl] for accelerated transcoding
+    healthcheck:
+      disable: false
+    volumes:
+      - ${PHOTOS_DIR}:/data
+    secrets:
+      - immich-postgres-user
+      - immich-postgres-password
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.22
+      immich_network:
+    restart: unless-stopped
+
+  immich-machine-learning:
+    container_name: immich_machine_learning
+    # For hardware acceleration, add one of -[armnn, cuda, rocm, openvino, rknn] to the image tag.
+    # Example tag: ${IMMICH_VERSION:-release}-cuda
+    image: ghcr.io/immich-app/immich-machine-learning:${IMMICH_VERSION:-release}-cuda
+    extends: # uncomment this section for hardware acceleration - see https://docs.immich.app/features/ml-hardware-acceleration
+      file: hwaccel.ml.yaml
+      service: cuda # set to one of [armnn, cuda, rocm, openvino, openvino-wsl, rknn] for accelerated inference - use the `-wsl` version for WSL2 where applicable
+    env_file:
+      - .env
+    healthcheck:
+      disable: false
+    volumes:
+      - model_cache:/cache
+    networks:
+      - immich_network
+    restart: unless-stopped
+
+  redis:
+    container_name: immich_redis
+    image: docker.io/valkey/valkey:9@sha256:fb8d272e529ea567b9bf1302245796f21a2672b8368ca3fcb938ac334e613c8f
+    healthcheck:
+      test: redis-cli ping || exit 1
+    networks:
+      - immich_network
+    restart: unless-stopped
+
+  database:
+    container_name: immich_postgres
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    environment:
+      POSTGRES_INITDB_ARGS: "--data-checksums"
+      POSTGRES_DB: immich
+      POSTGRES_USER_FILE: /run/secrets/immich-postgres-user
+      POSTGRES_PASSWORD_FILE: /run/secrets/immich-postgres-password
+      DB_STORAGE_TYPE: "HDD"
+    volumes:
+      - immich_postgres:/var/lib/postgresql/data
+    secrets:
+      - immich-postgres-user
+      - immich-postgres-password
+    shm_size: 128mb
+    networks:
+      - immich_network
+    restart: unless-stopped
+
+volumes:
+  model_cache:
+  immich_postgres:
+
+networks:
+  webapps:
+    external: true
+  immich_network:
+    driver: bridge
