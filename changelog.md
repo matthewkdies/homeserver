@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [0.13.0] - 2026/02/05
+### Added
+- [Uptime Kuma](https://uptimekuma.org/) to monitor other webapps and containers. This container leverages [Docker Socket Proxy](https://github.com/Tecnativa/docker-socket-proxy) to reduce potential security implications of mounting the Docker socket.
+
 ### Changed
 - Upgraded Mealie to 3.10.2.
 

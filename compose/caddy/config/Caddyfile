@@ -281,3 +281,11 @@ immich.mattdies.com {
 	import log_for_app "immich"
 	reverse_proxy immich:2283
 }
+
+status.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "uptime-kuma"
+	reverse_proxy uptime_kuma:3001
+}

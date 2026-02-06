@@ -1,0 +1,65 @@
+# ----------------------------------------------------------------------------------------
+# Uptime Kuma is a monitoring software that makes healthchecks and requests to other
+# applications and containers for a quick display about the current status of your server.
+# It also has notification capability, though it's optional. Basically, it's an
+# impressively easy-to-run status dashboard.
+#
+# I pair mine with Docker Socket Proxy, which exposes the Docker socket through an API and
+# limits the types of requests that it can make. In my case, I only want Uptime Kuma to
+# see the status of containers, so that's all I've given it access to.
+# ----------------------------------------------------------------------------------------
+
+services:
+  uptime-kuma:
+    image: louislam/uptime-kuma:2
+    container_name: uptime_kuma
+    hostname: uptime_kuma
+    labels:
+      caddy: status.mattdies.org
+      caddy.reverse_proxy: "* {{upstreams 3001}}"
+    environment:
+      TZ: America/New_York
+    expose:
+      - 3001
+    volumes:
+      - uptime_kuma_data:/app/data
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.23
+      uptime_kuma_network:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 5s
+    restart: unless-stopped
+
+  uptime-socket-proxy:
+    image: tecnativa/docker-socket-proxy
+    container_name: uptime-socket-proxy
+    hostname: docker-socket-proxy
+    privileged: true
+    expose:
+      - 2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LOG_LEVEL: info
+      CONTAINERS: 1 # required for Kuma to see container list/status
+    networks:
+      uptime_kuma_network:
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  uptime_kuma_data:
+
+networks:
+  webapps:
+    external: true
+  uptime_kuma_network:
+    driver: bridge
