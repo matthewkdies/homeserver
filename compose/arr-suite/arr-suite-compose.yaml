@@ -411,7 +411,7 @@ services:
     environment:
       SLSKD_DOWNLOADS_DIR: /downloads
       SLSKD_INCOMPLETE_DIR: /incomplete
-      SLSKD_UMASK: 002
+      SLSKD_UMASK: 2
     volumes:
       - soulseek_data:/app/data
       - soulseek_config:/app
@@ -434,8 +434,11 @@ services:
     image: mrusse08/soularr:latest
     container_name: soularr
     hostname: soularr
+    expose:
+      - 8266
     user: 147:65536
     environment:
+      WEBUI_PORT: 8266
       TZ: America/New_York
       SCRIPT_INTERVAL: 300
     volumes:
