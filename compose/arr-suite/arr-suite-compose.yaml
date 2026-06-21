@@ -4,7 +4,7 @@
 # won't affect the availability of Plex itself.
 #
 # The current capabilities of this stack:
-#   1. Handling Plex users' content requests (overseerr)
+#   1. Handling Plex users' content requests (seerr)
 #   2. Creation of a VPN container that uses my Mullvad account (gluetun)
 #   3. Usage of VPN container to torrent **LEGAL CONTENT ONLY!** (qbittorrent)
 #   4. Automated management of handling connections to torrent clients (prowlarr)
@@ -219,22 +219,23 @@ services:
     restart: unless-stopped
 
   # content request monitoring + management
-  overseerr:
-    image: linuxserver/overseerr
-    container_name: overseerr
-    hostname: overseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
+    hostname: seerr
     environment:
       PUID: 140
       PGID: 136
       TZ: America/New_York
-    # healthcheck:
-    #   test: curl -f http://localhost:5055/api/v1/status || exit 1
-    #   interval: 5m00s
-    #   timeout: 10s
-    #   retries: 2
-    #   start_period: 30s
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/status | exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
     volumes:
-      - overseerr_config:/config
+      - overseerr_config:/app/config
     expose:
       - 5055
     networks:
@@ -507,14 +508,14 @@ services:
     security_opt:
       - no-new-privileges:true
     depends_on:
-      - overseerr
+      - seerr
       - sonarr
       - radarr
       - radarr4k
       - tautulli
     restart: unless-stopped
 
-  # # generates summaries, like a certain music streaming service every year
+    # # generates summaries, like a certain music streaming service every year
   # wrapperr:
   #   image: ghcr.io/aunefyren/wrapperr:latest
   #   container_name: wrapperr
