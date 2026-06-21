@@ -1,0 +1,56 @@
+# -------------------------------------------------------------------------------------
+# It turns out that it's really easy to run your own LLM if your GPU is capable enough.
+# Mine just so happens to be, so I decided to run one! The below runs two containers:
+# - Ollama: An AI model runner
+# - Open WebUI: An AI web interface
+# Through these two applications, it's pretty easy to self host your own LLM for
+# whatever you want! I'm going to use it to program and experiment with OpenClaw
+# without feeling bad about draining lakes and rivers and oceans and puddles.
+# -------------------------------------------------------------------------------------
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    hostname: ollama
+    expose:
+      - 11434
+    volumes:
+      - ollama_data:/root/.ollama
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    hostname: open-webui
+    expose:
+      - 8080
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - open_webui_data:/app/backend/data
+    depends_on:
+      - ollama
+    networks:
+      - default
+      - webapps
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  open_webui_data:
+
+networks:
+  webapps:
+    external: true

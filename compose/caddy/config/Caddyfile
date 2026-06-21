@@ -304,6 +304,15 @@ status.mattdies.com {
 	import log_for_app "uptime-kuma"
 	reverse_proxy uptime_kuma:3001
 }
+
+llm.mattdies.com {
+	import use_authelia
+	import log_for_app "llm"
+	import local_network_only
+	import cloudflare_dns
+	reverse_proxy open-webui:8080
+}
+
 mattdies.com {
 	import cloudflare_dns
 	import log_for_app "mattdies"
