@@ -32,6 +32,7 @@ services:
         condition: service_healthy
     volumes:
       - mealie_data:/app/data/:rw
+      - ${COMPOSE_DIR}/mealie/prompts:/app/prompts:ro
     environment:
       ALLOW_SIGNUP: false # prevents uninvited signup
       PUID: 123
@@ -56,9 +57,8 @@ services:
       # visual settings
       THEME_LIGHT_PRIMARY: 525E3C
       THEME_DARK_PRIMARY: 525E3C
-      # OpenAI integration
-      OPENAI_API_KEY_FILE: /run/secrets/OPENAI_API_KEY
-      OPENAI_MODEL: gpt-4o-mini # upgrade to gpt-4o if needed
+      # I use a local LLM, so I need custom prompts. My GPU isn't beefy :/
+      OPENAI_CUSTOM_PROMPT_DIR: /app/prompts
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
@@ -80,7 +80,7 @@ services:
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD", "/pg_healthcheck.sh"]
+      test: [ "CMD", "/pg_healthcheck.sh" ]
       timeout: 45s
       interval: 10s
       retries: 10
