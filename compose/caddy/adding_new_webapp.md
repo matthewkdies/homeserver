@@ -9,7 +9,7 @@
 
 ## But first... "hairpinning"
 We want [NAT loopback/"hairpinning"](https://nordvpn.com/cybersecurity/glossary/nat-loopback/) so that I can distinguish between local and remote traffic and make some (most) web-apps "local only".
-As a security measure, I'm choosing to only serve apps to the world that are completely necessary, like Overseerr.
+As a security measure, I'm choosing to only serve apps to the world that are completely necessary, like Seerr.
 When Caddy can distinguish between local and remote traffic, we're able to restrict chosen access to chosen web-apps to local-only using the below snippet:
 ```
 (local_network_only) {
