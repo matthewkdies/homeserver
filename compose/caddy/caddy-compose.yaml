@@ -50,7 +50,7 @@ services:
       - no-new-privileges:true
     networks:
       webapps:
-        ipv4_address: 172.19.0.3  # give it a static IP so we can create firewall rules
+        ipv4_address: 172.19.0.3 # give it a static IP so we can create firewall rules
     restart: unless-stopped
 
 volumes:
