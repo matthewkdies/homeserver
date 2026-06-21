@@ -13,24 +13,13 @@ secrets:
     file: ${SECRETS_DIR}/mealie_postgres_password
   SMTP_PASSWORD:
     file: ${SECRETS_DIR}/mealie_gmail_password
-  OPENAI_API_KEY:
-    file: ${SECRETS_DIR}/mealie_openai_api_key
 
 services:
   mealie:
     # mealie advises against using the latest tag
     # however, I like new features/bug fixes and I know how to debug
-    # image: ghcr.io/mealie-recipes/mealie:latest
-    image: mealie-pwa-theme-fix:3.10.2
-    build:
-      # there's a bug that causes the PWA theme-color to not be respected:
-      # https://github.com/mealie-recipes/mealie/issues/4563
-      # in order to resolve it, I build my own custom image to use (until it's resolved)
-      context: ${COMPOSE_DIR}/mealie/mealie_source
-      dockerfile: ${COMPOSE_DIR}/mealie/mealie_source/docker/Dockerfile
+    image: ghcr.io/mealie-recipes/mealie:latest
     container_name: mealie
-    labels: # watchtower can't build images, so we'll ignore it
-      - "com.centurylinklabs.watchtower.enable=false" # TODO: remove when issue is resolved
     hostname: mealie
     # "Setting an explicit memory limit is recommended ... will improve idle performance"
     mem_limit: 4g
@@ -74,7 +63,6 @@ services:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
       - SMTP_PASSWORD
-      - OPENAI_API_KEY
     security_opt:
       - no-new-privileges:true
     networks:
