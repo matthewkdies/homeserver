@@ -289,3 +289,16 @@ status.mattdies.com {
 	import log_for_app "uptime-kuma"
 	reverse_proxy uptime_kuma:3001
 }
+mattdies.com {
+	import cloudflare_dns
+	import log_for_app "mattdies"
+	root /srv/mattdies
+	file_server
+}
+	
+# blog.mattdies.com {
+# 	import cloudflare_dns
+# 	import log_for_app "blog"
+# 	root /srv/blog
+# 	file_server
+# }
