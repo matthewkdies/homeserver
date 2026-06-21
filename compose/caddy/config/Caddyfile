@@ -177,6 +177,14 @@ soulseek.mattdies.com {
 	}
 }
 
+soularr.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "soularr"
+	reverse_proxy soularr:8266
+}
+
 tautulli.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
