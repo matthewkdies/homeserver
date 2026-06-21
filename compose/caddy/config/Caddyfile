@@ -147,7 +147,14 @@ bazarr.mattdies.com {
 overseerr.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "overseerr"
-	reverse_proxy overseerr:5055
+	reverse_proxy seerr:5055
+	redir https://seerr.mattdies.com{uri} permanent
+}
+
+seerr.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "seerr"
+	reverse_proxy seerr:5055
 }
 
 tdarr.mattdies.com {
