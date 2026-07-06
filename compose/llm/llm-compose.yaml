@@ -41,8 +41,9 @@ services:
     depends_on:
       - ollama
     networks:
-      - default
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.24
+      default:
     security_opt:
       - no-new-privileges:true
     restart: unless-stopped
