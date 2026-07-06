@@ -39,6 +39,7 @@ services:
       PGID: 124
       TZ: America/New_York
       BASE_URL: https://mealie.mattdies.com
+      TOKEN_TIME: 8760
       # database settings
       DB_ENGINE: postgres
       POSTGRES_USER_FILE: /run/secrets/POSTGRES_USER
