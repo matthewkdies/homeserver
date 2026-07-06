@@ -39,7 +39,7 @@ services:
       # https://github.com/caddyserver/caddy/issues/5735#issuecomment-1675896585
       - ${COMPOSE_DIR}/caddy/config:/etc/caddy
       - ${DOCKER_DIR}/caddy/blog:/srv/blog
-      - ${DOCKER_DIR}/caddy/mattdies:/srv/mattdies
+      - ${DOCKER_DIR}/caddy/website/site:/srv/website/site
       - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh
       - caddy_data:/data
       - caddy_config:/config

@@ -315,7 +315,7 @@ llm.mattdies.com {
 mattdies.com {
 	import cloudflare_dns
 	import log_for_app "mattdies"
-	root /srv/mattdies
+	root /srv/website/site
 	file_server
 }
 	
