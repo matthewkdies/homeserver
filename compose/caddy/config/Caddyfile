@@ -306,7 +306,6 @@ status.mattdies.com {
 }
 
 llm.mattdies.com {
-	import use_authelia
 	import log_for_app "llm"
 	import local_network_only
 	import cloudflare_dns
