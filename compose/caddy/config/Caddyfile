@@ -130,9 +130,9 @@ status.mattdies.com {
 }
 
 llm.mattdies.com {
-	import log_for_app "llm"
-	import local_network_only
 	import cloudflare_dns
+	import local_network_only
+	import log_for_app "llm"
 	reverse_proxy open-webui:8080
 }
 
