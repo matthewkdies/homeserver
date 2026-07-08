@@ -1,29 +1,37 @@
 # File structure: https://caddyserver.com/docs/caddyfile/concepts#structure
 # -------------------
 
-# Global Options
+### --------------
+### GLOBAL OPTIONS
+### --------------
+
 {
-	# debug
+	# debug  # uncomment to enable debug mode
 	servers {
+		# trusted_proxies docs: # https://caddyserver.com/docs/caddyfile/options#trusted-proxies
+		# caddy-cloudflare-ip docs: https://github.com/WeidiDeng/caddy-cloudflare-ip
 		trusted_proxies cloudflare {
 			interval 12h
 			timeout 15s
 		}
 	}
-	dynamic_dns {
-		provider cloudflare {env.CLOUDFLARE_API_TOKEN}
+	dynamic_dns {  # caddy-dynamicdns docs: https://github.com/mholt/caddy-dynamicdns
+		provider cloudflare {env.CLOUDFLARE_API_TOKEN}  # caddy-dns/cloudflare docs: https://github.com/caddy-dns/cloudflare
 		domains {
+			# routes the below domains
 			mattdies.com www minecraft
 		}
-		versions ipv4
-		dynamic_domains
+		versions ipv4  # disables IPv6
+		dynamic_domains  # searches the Caddyfile for new domains, and manages them
 	}
 }
 
-# --------------------
+### --------
+### SNIPPETS
+### --------
 
-# Snippets
 (use_authelia) {
+	# forwards any requests to the route using the snippet to authelia for login before access
 	forward_auth authelia:9091 {
 		uri /api/authz/forward-auth
 		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
@@ -31,11 +39,14 @@
 }
 
 (local_network_only) {
-	@external not remote_ip 192.168.1.0/24 172.19.0.0/16
+	# restricts access to any route using the snippet to local traffic only by responding with a 403
+	@external not remote_ip 10.144.88.0/24 172.19.0.0/16
 	respond @external 403
 }
 
 (cloudflare_dns) {
+	# routes an application with cloudflare
+	# this could *probably* be a global setting, but just in case we don't want something publicly routed, it's a snippet
 	tls {
         dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 		resolvers 1.1.1.1 1.1.1.2
@@ -43,30 +54,35 @@
 }
 
 (log_for_app) {
+	# logs an app to the caddy logfiles for the route based on the args
 	log {
 		output file /var/log/caddy/{args[0]}.log
 	}
 }
 
-# https://github.com/mholt/caddy-ratelimit?tab=readme-ov-file#examples
+# caddy-ratelimit docs: https://github.com/mholt/caddy-ratelimit?tab=readme-ov-file#examples
 (rate_limit_api) {
+	# rate limits a given path with some opinionated measures
 	rate_limit {
 		distributed
 		zone api_zone {
 			match {
-				path "/api/*"
+				path {args[0]}    # Use the argument for the snippet to match the path
 			}
 			key    {remote_host}  # Use the client's IP address as the key
 			window  5s            # Rate limiting window (default is 1 minute)
-			events  200            # Allow up to 10 requests per window
+			events  200           # Allow up to 200 requests per window
 		}
 		log_key
 	}
 }
 
-# -------------------
+### ----------
+### SERVE APPS
+### ----------
 
-# Serve Apps
+# ------------------------------------------------
+# authentication
 
 auth.mattdies.com {
 	import local_network_only
@@ -75,10 +91,13 @@ auth.mattdies.com {
 	reverse_proxy authelia:9091
 }
 
+# ------------------------------------------------
+# various helpful webapps
+
 mealie.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "mealie"
- 	import rate_limit_api
+ 	import rate_limit_api "/api/*"
 	reverse_proxy mealie:9000
 }
 
@@ -89,11 +108,44 @@ actual.mattdies.com {
 	reverse_proxy actual:5006
 }
 
+lubelogger.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "lubelogger"
+	reverse_proxy lubelogger:8080
+}
+
+immich.mattdies.com {
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "immich"
+	reverse_proxy immich:2283
+}
+
+status.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "uptime-kuma"
+	reverse_proxy uptime_kuma:3001
+}
+
+llm.mattdies.com {
+	import log_for_app "llm"
+	import local_network_only
+	import cloudflare_dns
+	reverse_proxy open-webui:8080
+}
+
+# ------------------------------------------------
+# plex + arr suite
+
 plex.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "plex"
-	reverse_proxy 192.168.1.102:32400
+	reverse_proxy 10.144.88.102:32400
 }
 
 sonarr.mattdies.com {
@@ -207,109 +259,60 @@ maintainerr.mattdies.com {
 	reverse_proxy maintainerr:6246
 }
 
+# will bring this back near the end of every year
 # wrapperr.mattdies.com {
-# 	# import use_authelia
 # 	import cloudflare_dns
-# 	# import local_network_only
 # 	import log_for_app "wrapperr"
 # 	reverse_proxy wrapperr:8282
 # }
+
+# ------------------------------------------------
+# local network sites
 
 pihole-nas.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "pihole-nas"
-	reverse_proxy 192.168.1.100:8001
-	rewrite / /admin
+	reverse_proxy 10.144.88.100:8001
+	rewrite / /admin  # since the web GUI is hosted at /admin, let's make it easier to access
 }
 
 pihole-pi.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "pihole-pi"
-	reverse_proxy 192.168.1.35:8000
-	rewrite / /admin
+	reverse_proxy 10.144.88.35:8000
+	rewrite / /admin  # since the web GUI is hosted at /admin, let's make it easier to access
 }
 
 nas.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "nas"
-	reverse_proxy 192.168.1.100:50362 {
-		transport http {
-			tls
-			tls_insecure_skip_verify
-		}
-	}
+	reverse_proxy 10.144.88.100:50361  # requires that auto-redirect to HTTPS in DSM settings is disabled
 }
 
 nas-backup.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "nas-backup"
-	reverse_proxy 192.168.1.101:50382 {
-		transport http {
-			tls
-			tls_insecure_skip_verify
-		}
-	}
+	reverse_proxy 10.144.88.101:50381  # requires that auto-redirect to HTTPS in DSM settings is disabled
 }
 
 router.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
 	import log_for_app "router"
-	reverse_proxy 192.168.1.1:7891 {
-		transport http {
-			tls
-			tls_insecure_skip_verify
-		}
-	}
+	reverse_proxy 10.144.88.1:7890  # requires that auto-redirect to HTTPS in SRM settings is disabled
 }
+
+# ------------------------------------------------
+# my websites
 
 footballpool.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "footballpool"
 	reverse_proxy football-pool:5600
-}
-
-lubelogger.mattdies.com {
-	import use_authelia
-	import cloudflare_dns
-	import local_network_only
-	import log_for_app "lubelogger"
-	reverse_proxy lubelogger:8080
-}
-
-# kcal.mattdies.com {
-# 	import use_authelia
-# 	import cloudflare_dns
-# 	import local_network_only
-# 	import log_for_app "kcal"
-# 	reverse_proxy kcal-nginx:10081
-# }
-
-immich.mattdies.com {
-	# import use_authelia
-	import cloudflare_dns
-	import local_network_only
-	import log_for_app "immich"
-	reverse_proxy immich:2283
-}
-
-status.mattdies.com {
-	import use_authelia
-	import cloudflare_dns
-	import local_network_only
-	import log_for_app "uptime-kuma"
-	reverse_proxy uptime_kuma:3001
-}
-
-llm.mattdies.com {
-	import log_for_app "llm"
-	import local_network_only
-	import cloudflare_dns
-	reverse_proxy open-webui:8080
 }
 
 mattdies.com {
@@ -325,3 +328,5 @@ mattdies.com {
 # 	root /srv/blog
 # 	file_server
 # }
+
+# ------------------------------------------------
