@@ -5,10 +5,7 @@
 # I have a network mount to my Synology NAS where I write the
 # resulting tarfiles to. It also uses timestamps to create
 # rotating backups. It will keep the seven most recent backups
-# of each volume, and discard any older than that. This way
-# there are multiple backup files from different dates without
-# taking up an insane amount of space. Eventually, I plan to
-# do this to another NAS that I have, which may be off-site.
+# of each volume, and discard any older than that.
 # ------------------------------------------------------------
 
 set -e
@@ -19,14 +16,15 @@ set -e
 LOG_FILE="${DOCKER_DIR}/log/backup_system.log"
 BACKUP_DIR="/mnt/backups/system"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-MAX_BACKUPS=7  # Number of backups to retain for the system
+MAX_BACKUPS=7  
 
-# TODO: rethink cleanup logic
 # remove the oldest backups until there are only MAX_BACKUPS backups remaining
 prune_old_backups() {
-    local backups=( "${BACKUP_DIR}/system_backup_"*".tar.gz" )  # array of backups
+    # Using a nullglob ensures that if no files match, the array is empty instead of containing the literal string
+    shopt -s nullglob
+    local backups=( "${BACKUP_DIR}"/system_backup_*.tar.gz )
+    shopt -u nullglob
 
-    # only proceed if there are more backups than MAX_BACKUPS
     if (( ${#backups[@]} > MAX_BACKUPS )); then
         local to_delete_count=$(( ${#backups[@]} - MAX_BACKUPS ))
         log_to_file "Pruning ${to_delete_count} old backup(s) for system." "${LOG_FILE}"
@@ -45,7 +43,7 @@ prune_old_backups() {
     fi
 }
 
-# ensure backup directory exists (in case mount is lost)
+# Ensure backup directory exists
 if ! mountpoint -q "/mnt/backups"; then
     log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
     exit 1
@@ -58,9 +56,10 @@ log_to_file "Beginning system backup at ${TIMESTAMP}." "${LOG_FILE}"
 # hey, I'm not paranoid, you're paranoid!
 TEMP_BACKUP="${BACKUP_DIR}/.system_backup_${TIMESTAMP}.tar.gz.tmp"
 FINAL_BACKUP="${BACKUP_DIR}/system_backup_${TIMESTAMP}.tar.gz"
-tar -cpzf "${TEMP_BACKUP}" --exclude={"/proc","/sys","/dev","/mnt","/media","/run","/lost+found","/var/lib/docker"} /  2>/dev/null
-mv "${TEMP_BACKUP}" "${FINAL_BACKUP}"
-rm "${TEMP_BACKUP}"
+
+# prevent 'set -e' at top of file from killing the script when tar encounters vanishing live files (with exit status 1 or 2)
+tar -cpzf "${TEMP_BACKUP}" --exclude={"/proc","/sys","/dev","/mnt","/media","/run","/lost+found","/var/lib/docker"} / 2>/dev/null || [[ $? -eq 1 || $? -eq 2 ]]
+mv "${TEMP_BACKUP}" "${FINAL_BACKUP}" # once that's done, move the tempfile to the permanant location
 
 log_to_file "Backup completed successfully!" "${LOG_FILE}"
 
