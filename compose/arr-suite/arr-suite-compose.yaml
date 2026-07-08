@@ -353,7 +353,7 @@ services:
       TZ: America/New_York
       HTTPPROXY: off
       SHADOWSOCKS: off
-      FIREWALL_OUTBOUND_SUBNETS: 172.19.0.0/16,192.168.1.0/24
+      FIREWALL_OUTBOUND_SUBNETS: 172.19.0.0/16,10.144.88.0/24
       UPDATER_PERIOD: 24h
     secrets:
       - wireguard-private-key
