@@ -1,0 +1,46 @@
+# ----------------------------------------------------------------------------
+# Wirefuard is an extremely simple, secure, and fast self-hosted VPN.
+# Seriously, it shouldn't be free; set this uo and then go donate to them.
+# My setuo here is obviously pretty specific to my network, but you get the
+# idea here. Note that I use the domain vpn.mattdies.com. There isn't anything
+# running there as a web application, but I have it in my Caddyfile anyways.
+# This way, the dynamic DNS will update the domain if my public IP ever
+# changes. All-in-all, it's pretty neat how this all came together.
+#
+# NOTE: This compose file shouldn't be used with `docker compose up` directly.
+# To avoid using the `SYS_MODULE` capability and mounting `/lib/modules` in a
+# volume, I instead use the `./start_wireguard.sh` script to handle the needed
+# `modprobe` command prior to container startup. You can do this, or you can
+# add `cap_add: SYS_MODULE` and `volumes: /lib/modules:/lib/modules`.
+# ----------------------------------------------------------------------------
+
+services:
+  wireguard:
+    image: lscr.io/linuxserver/wireguard:latest
+    container_name: wireguard
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/New_York
+      - SERVERURL=vpn.mattdies.com # Your grey-clouded Cloudflare DDNS domain
+      - SERVERPORT=51820
+      - PEERS=macbook,iphone # Only generates the two configs you need right now
+      - PEERDNS=10.144.88.100,10.144.88.35 # my primary and secondary Pi-holes
+      - ALLOWEDIPS=0.0.0.0/0 # full tunnel
+    volumes:
+      - ${DOCKER_DIR}/wireguard:/config
+    networks:
+      wg_network:
+        ipv4_address: 172.29.0.100
+    ports:
+      - 51820:51820/udp
+    restart: unless-stopped
+
+networks:
+  wg_network:
+    name: wireguard_network
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16

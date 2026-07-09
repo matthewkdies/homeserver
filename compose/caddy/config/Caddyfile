@@ -40,7 +40,9 @@
 (local_network_only) {
 	# restricts access to any route using the snippet to local traffic only by responding with a 403
 	@external not remote_ip 10.144.88.0/24 172.19.0.0/16
-	respond @external 403
+	respond @external 403 {
+		close
+	}
 }
 
 (cloudflare_dns) {
@@ -302,6 +304,18 @@ router.mattdies.com {
 	import local_network_only
 	import log_for_app "router"
 	reverse_proxy 10.144.88.1:7890 # requires that auto-redirect to HTTPS in SRM settings is disabled
+}
+
+vpn.mattdies.com {
+	# this entry isn't a real website serving content; it's solely
+	# used to just get the caddy-dynamicdns plugin to automatically route
+	# this domain and keep it up-to-date if my public IP changes
+	# then I can use this domain for the VPN's public URL for clients to connect
+	import cloudflare_dns
+	import log_for_app "vpn"
+    respond "Not Found" 403 {
+		close
+	}
 }
 
 # ------------------------------------------------
