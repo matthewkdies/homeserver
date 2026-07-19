@@ -1,0 +1,91 @@
+# --------------------------------------------------------------------
+# [Ntfy](https://docs.ntfy.sh/) "lets you send push notifications to
+# your phone or desktop via scripts from any computer, using simple
+# HTTP PUT or POST requests." It's a bit rough to set up, but once
+# it is, you'll want to put it in every script and integrate it with
+# every service. I am considering letting others in on this as well
+# (e.g., Plex/Seerr users) so that they can see when requested
+# content is available. It's seriously really nice!
+#
+# In the `./.env.example` file, I define a few environment variables
+# that I use throughout the scripts that publish to ntfy. The
+# `./server.yaml.example` file is an example file that you can
+# customize to securely configure sensitive values, etc. To use
+# them, you can run `cp server.yaml.example ${DOCKER_DIR}/server.yaml`
+# and copy/paste the values from the env example into your
+# `~/.envvars` file, provided you're using one.
+# --------------------------------------------------------------------
+
+secrets:
+  postgres_user:
+    file: ${SECRETS_DIR}/ntfy_postgres_user
+  postgres_password:
+    file: ${SECRETS_DIR}/ntfy_postgres_password
+
+services:
+  ntfy:
+    image: binwiederhier/ntfy:v2
+    container_name: ntfy
+    hostname: ntfy
+    command: serve
+    environment:
+      TZ: America/New_York
+      NTFY_CONFIG_FILE: /etc/ntfy/server.yaml # I prefer yaml over yml
+    user: 153:149
+    volumes:
+      - ${DOCKER_DIR}/ntfy/server.yaml:/etc/ntfy/server.yaml
+      - ntfy_data:/var/lib/ntfy
+    expose:
+      - 8255
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget -q --tries=1 http://localhost:8255/v1/health -O - | grep -Eo '\"healthy\"\\s*:\\s*true' || exit 1",
+        ]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - webapps
+      - default
+    depends_on:
+      ntfy-postgres-db:
+        condition: service_healthy
+    restart: unless-stopped
+    init: true # needed, if healthcheck is used; prevents zombie processes
+
+  ntfy-postgres-db:
+    image: postgres:17
+    container_name: ntfy-postgres
+    hostname: ntfy-postgres
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$(cat /run/secrets/postgres_user) -d ntfy",
+        ]
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    volumes:
+      - ntfy_postgres:/var/lib/postgresql/data:rw
+    secrets:
+      - postgres_user
+      - postgres_password
+    environment:
+      POSTGRES_DB: ntfy
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    restart: unless-stopped
+
+volumes:
+  ntfy_data:
+  ntfy_postgres:
+
+networks:
+  webapps:
+    external: true

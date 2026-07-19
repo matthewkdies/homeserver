@@ -318,6 +318,23 @@ vpn.mattdies.com {
 	}
 }
 
+ntfy.mattdies.com {
+	# https://docs.ntfy.sh/config/#__tabbed_16_5
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "ntfy"
+	reverse_proxy ntfy:8255
+
+	# redirect HTTP to HTTPS, but only for GET topic addresses, since we want
+	# it to work with curl without the annoying https:// prefix
+	@httpget {
+		protocol http
+		method GET
+		path_regexp ^/([-_a-z0-9]{0,64}$|docs/|static/)
+	}
+	redir @httpget https://{host}{uri}
+}
+
 # ------------------------------------------------
 # my websites
 

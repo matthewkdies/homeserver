@@ -1,0 +1,21 @@
+# Server
+base-url: "https://ntfy.<yourdomain>.com"
+behind-proxy: true
+listen-http: ":8255"
+
+# Database
+database-url: "postgres://<dbuser>:<dbpassword>@ntfy-postgres:5432/ntfy"
+
+# Access control
+auth-default-access: "deny-all"
+enable-login: true
+require-login: true
+
+# Web push
+web-push-public-key: "<public_key>"
+web-push-private-key: "<private_key>"
+web-push-email-address: "<email>"
+
+# Upstream
+# https://docs.ntfy.sh/config/?h=upstream#ios-instant-notifications
+upstream-base-url: "https://ntfy.sh"

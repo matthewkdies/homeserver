@@ -63,6 +63,21 @@ mv "${TEMP_BACKUP}" "${FINAL_BACKUP}" # once that's done, move the tempfile to t
 
 log_to_file "Backup completed successfully!" "${LOG_FILE}"
 
-prune_old_backups
-
-clean_log_file "${LOG_FILE}"
+# call the function, then "chain" calls to update ntfy
+# https://docs.ntfy.sh/examples/#cronjobs
+prune_old_backups \
+    && clean_log_file "${LOG_FILE}" \
+    && curl \
+    -H "Authorization: Bearer ${NTFY_TOKEN}" \
+    -H "Title: System Backup Succeeded" \
+    -H "Priority: low" \
+    -H "Tags: floppy_disk" \
+    -d "Server file system backup completed successfully." \
+    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}" \
+    || curl \
+    -H "Authorization: Bearer ${NTFY_TOKEN}" \
+    -H "Title: System Backup Failed" \
+    -H "Priority: high" \
+    -H "Tags: warning,rotating_light" \
+    -d "Server file system backup failed!" \
+    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}"

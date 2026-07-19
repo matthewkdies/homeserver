@@ -45,32 +45,51 @@ prune_old_backups() {
     fi
 }
 
-# ensure backup directory exists (in case mount is lost)
-if ! mountpoint -q "/mnt/backups"; then
-    log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
-    exit 1
-fi
+run_volume_backups() {
+    # ensure backup directory exists (in case mount is lost)
+    if ! mountpoint -q "/mnt/backups"; then
+        log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
+        return 1
+    fi
 
-# clear all unused volumes so we don't back up anything not needed
-docker volume prune --force
+    # clear all unused volumes so we don't back up anything not needed
+    docker volume prune --force
 
-# get a list of all of the volumes
-VOLUMES=$(docker volume ls --format "{{.Name}}")
+    # get a list of all of the volumes
+    VOLUMES=$(docker volume ls --format "{{.Name}}")
 
-for VOLUME in $VOLUMES; do
-    log_to_file "Backing up volume: ${VOLUME}." "${LOG_FILE}"
+    for VOLUME in $VOLUMES; do
+        log_to_file "Backing up volume: ${VOLUME}." "${LOG_FILE}"
 
-    # create a temporary container and use it to archive the volume
-    BACKUP_FILESTEM="${VOLUME}_${TIMESTAMP}"
-    docker run --rm \
-        -v "${VOLUME}":/data \
-        -v "${BACKUP_DIR}":/backup \
-        alpine \
-        tar czf "/backup/${BACKUP_FILESTEM}.tar.gz" -C /data .
+        # create a temporary container and use it to archive the volume
+        BACKUP_FILESTEM="${VOLUME}_${TIMESTAMP}"
+        docker run --rm \
+            -v "${VOLUME}":/data \
+            -v "${BACKUP_DIR}":/backup \
+            alpine \
+            tar czf "/backup/${BACKUP_FILESTEM}.tar.gz" -C /data .
 
-    prune_old_backups "${VOLUME}"  # clean old volumes
-done
+        prune_old_backups "${VOLUME}"  # clean old volumes
+    done
 
-log_to_file "Backups completed successfully!" "${LOG_FILE}"
+    log_to_file "Backups completed successfully!" "${LOG_FILE}"
+}
 
-clean_log_file "${LOG_FILE}"
+# call the function, then "chain" calls to update ntfy
+# https://docs.ntfy.sh/examples/#cronjobs
+run_volume_backups \
+    && clean_log_file "${LOG_FILE}" \
+    && curl \
+    -H "Authorization: Bearer ${NTFY_TOKEN}" \
+    -H "Title: Volume Backups Succeeded" \
+    -H "Priority: low" \
+    -H "Tags: package" \
+    -d "All Docker volume backups completed successfully." \
+    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}" \
+    || curl \
+    -H "Authorization: Bearer ${NTFY_TOKEN}" \
+    -H "Title: Volume Backups Failed" \
+    -H "Priority: high" \
+    -H "Tags: warning,rotating_light" \
+    -d "Docker volume backup script encountered an error!" \
+    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}"
