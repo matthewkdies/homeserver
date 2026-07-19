@@ -51,7 +51,6 @@ services:
     networks:
       webapps:
         ipv4_address: 172.19.0.2 # give it a static IP so we can create set vars elsewhere
-
     restart: unless-stopped
 
 # TODO: set up Postgres database instead of SQLite
