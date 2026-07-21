@@ -61,5 +61,5 @@ Beyond that, starting a stack is as simple as `docker compose --file <path_to_fi
 - [`compose/`](./compose/): Contains the Docker Compose files, Dockerfiles, configuration files, healthscripts, and documentation related to the Docker containers on my home server.
 - [`scripts/`](./scripts/): Contains the scripts that I use within containers and in common use.
 - [`changelog.md`](./changelog.md): Documentation on updates to the repository.
-- [`.pre-commit-config.yaml`](./.pre-commit-config.yaml): A `pre-commit` config file that runs the [`detect-secrets`](https://github.com/Yelp/detect-secrets) CLI to prevent secrets from inadvertantly being committed to the remote repository.
+- [`prek.toml`](./prek.toml): A `prek` config file that runs the [`detect-secrets`](https://github.com/Yelp/detect-secrets) CLI to prevent secrets from inadvertantly being committed to the remote repository.
 - [`.github/workflows`](./.github/workflows/): Contains custom workflows, which currently includes making releases automatically.

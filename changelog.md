@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A [Python script](./scripts/change_user.sh) to check for new breaches against the XposedOrNot API.
 
+### Changed
+
+- Switched from `pre-commit` to [`prek`](https://prek.j178.dev/).
+
 ## [1.0.0] - 2026/07/18
 
 > This is the `1.0.0` release! 🎉 There's really not much that differentiates this version with prior versions of the server (e.g., there aren't huge breaking changes), but I figured that the server is at least widely useful enough to stop using zero-versions.
