@@ -319,7 +319,7 @@ vpn.mattdies.com {
 	# then I can use this domain for the VPN's public URL for clients to connect
 	import cloudflare_dns
 	import log_for_app "vpn"
-    respond "Not Found" 403 {
+	respond "Not Found" 403 {
 		close
 	}
 }
