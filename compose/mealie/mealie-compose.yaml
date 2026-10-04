@@ -60,6 +60,8 @@ services:
       THEME_DARK_PRIMARY: 525E3C
       # I use a local LLM, so I need custom prompts. My GPU isn't beefy :/
       OPENAI_CUSTOM_PROMPT_DIR: /app/prompts
+      # proxy support
+      SCRAPER_FLARESOLVERR_URL: http://flaresolverr:8191
     secrets:
       - POSTGRES_USER
       - POSTGRES_PASSWORD
@@ -102,9 +104,27 @@ services:
       - mealie_network
     restart: unless-stopped
 
+  # helps to bypass Cloudflare protection used by recipe sites
+  flaresolverr:
+    image: flaresolverr/flaresolverr:latest
+    container_name: mealie-flaresolverr
+    hostname: flaresolverr
+    environment:
+      TZ: America/New_York
+    volumes:
+      - flaresolverr_config:/config
+    expose:
+      - 8191
+    networks:
+      - mealie_network
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
 volumes:
   mealie_data:
   mealie_postgres:
+  flaresolverr_config:
 
 networks:
   webapps:

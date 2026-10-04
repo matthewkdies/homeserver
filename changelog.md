@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A [Home Assistant](https://www.home-assistant.io/) container to manage smart device automation in my home with an emphasis on local control and privacy.
+- A sidecar Flaresolverr container to Mealie ([see docs](https://mealie.io/documentation/getting-started/installation/backend-config/#flaresolverr)) for solving TLS challenges when scraping recipes.
 
 ### Changed
 
