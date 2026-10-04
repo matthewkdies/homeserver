@@ -1,0 +1,29 @@
+# ---------------------------------------------------------------------------------------
+# Home Assistant is an amazing container that helps to manage automation related to smart
+# devices in your home with an emphasis on privacy and control. It works by adding your
+# devices via integrations, allowing fine-grained control through automations/scripts,
+# groups, visualizations, and much, much more. This container is only really worth using
+# if you have devices in your home that are capable of running, such as Zigbee/Z-wave
+# devices or devices with accessible cloud platforms. For ultimate privacy, I recommend
+# finding devices that don't require a cloud platform, but this is not always possible.
+# ---------------------------------------------------------------------------------------
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: homeassistant
+    hostname: homeassistant
+    volumes:
+      - ${DOCKER_DIR}/home-assistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+      - /run/dbus:/run/dbus:ro # allows Bluetooth/hardware discovery on Linux
+    devices:
+      # add zigbee receiver dongle
+      - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_b8cc601f2b15f0118e26e374b887153e-if00-port0
+    environment:
+      TZ: America/New_York
+    # privileged: true grants the container access to underlying system hardware
+    # useful for USB Zigbee/Z-Wave dongles or Bluetooth adapters
+    privileged: true
+    network_mode: host
+    restart: unless-stopped

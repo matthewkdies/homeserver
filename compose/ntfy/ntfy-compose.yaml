@@ -35,6 +35,7 @@ services:
     volumes:
       - ${DOCKER_DIR}/ntfy/server.yaml:/etc/ntfy/server.yaml
       - ntfy_data:/var/lib/ntfy
+      - ntfy_attachments:/var/cache/ntfy/attachments
     expose:
       - 8255
     healthcheck:
@@ -84,6 +85,7 @@ services:
 
 volumes:
   ntfy_data:
+  ntfy_attachments:
   ntfy_postgres:
 
 networks:

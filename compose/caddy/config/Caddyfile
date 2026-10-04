@@ -137,6 +137,12 @@ llm.mattdies.com {
 	import log_for_app "llm"
 	reverse_proxy open-webui:8080
 }
+homeassistant.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "homeassistant"
+	import local_network_only
+	reverse_proxy 10.144.88.102:8123
+}
 
 # ------------------------------------------------
 # plex + arr suite
