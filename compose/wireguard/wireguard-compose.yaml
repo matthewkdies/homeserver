@@ -26,7 +26,7 @@ services:
       - TZ=America/New_York
       - SERVERURL=vpn.mattdies.com # Your grey-clouded Cloudflare DDNS domain
       - SERVERPORT=51820
-      - PEERS=macbook,iphone # Only generates the two configs you need right now
+      - PEERS=macbook,iphone,moira_phone # Only generates the two configs you need right now
       - PEERDNS=10.144.88.100,10.144.88.35 # my primary and secondary Pi-holes
       - ALLOWEDIPS=0.0.0.0/0 # full tunnel
     volumes:
