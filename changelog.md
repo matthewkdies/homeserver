@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Enabled attachments in Ntfy for storing images sent in notifications from Home Assistant.
+- The `Qwen3:8b` model is now pre-loaded into memory in `ollama`, so it's always ready to run on startup.
 
 ## [1.1.0] - 2026/07/20
 

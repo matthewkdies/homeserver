@@ -15,6 +15,20 @@ services:
     hostname: ollama
     expose:
       - 11434
+    environment:
+      - OLLAMA_KEEP_ALIVE=-1
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        (
+          until /bin/ollama list >/dev/null 2>&1; do
+            sleep 1
+          done
+          echo "Pre-warming Qwen3:8b into VRAM..."
+          /bin/ollama run Qwen3:8b --keepalive -1m ""
+          echo "Qwen3:8b is loaded and ready."
+        ) &
+        exec /bin/ollama serve
     volumes:
       - ollama_data:/root/.ollama
     security_opt:
@@ -36,6 +50,7 @@ services:
       - 8080
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
+      - DEFAULT_MODELS=Qwen3:8b
     volumes:
       - open_webui_data:/app/backend/data
     depends_on:
