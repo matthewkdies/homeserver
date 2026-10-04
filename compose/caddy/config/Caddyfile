@@ -144,6 +144,17 @@ homeassistant.mattdies.com {
 	reverse_proxy 10.144.88.102:8123
 }
 
+sunshine.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "sunshine"
+	import local_network_only
+	reverse_proxy 10.144.88.102:47990 {
+		transport http {
+			tls_insecure_skip_verify
+		}
+	}
+}
+
 # ------------------------------------------------
 # plex + arr suite
 
