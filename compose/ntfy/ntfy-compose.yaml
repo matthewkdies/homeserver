@@ -49,8 +49,9 @@ services:
       retries: 3
       start_period: 40s
     networks:
-      - webapps
-      - default
+      webapps:
+        ipv4_address: 172.19.0.25
+      default:
     depends_on:
       ntfy-postgres-db:
         condition: service_healthy
