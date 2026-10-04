@@ -17,6 +17,7 @@ services:
       - 11434
     environment:
       - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_CONTEXT_LENGTH=16384
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
