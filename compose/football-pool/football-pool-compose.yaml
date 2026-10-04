@@ -4,7 +4,7 @@
 # -------------------------------------------------------------------------
 
 secrets:
-  flask_secret_key:
+  secret_key:
     file: ${SECRETS_DIR}/football_pool_flask_secret_key
   db_user:
     file: ${SECRETS_DIR}/football_pool_db_user
@@ -33,7 +33,7 @@ services:
       timeout: 10s
       retries: 3
     secrets:
-      - flask_secret_key
+      - secret_key
       - db_user
       - db_pass
     restart: unless-stopped
