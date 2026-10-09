@@ -19,77 +19,77 @@ set -e
 LOG_FILE="${DOCKER_DIR}/log/backup_volumes.log"
 BACKUP_DIR="/mnt/backups/volumes"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-MAX_BACKUPS=3  # Number of backups to retain per volume
+MAX_BACKUPS=3 # Number of backups to retain per volume
 
 # remove the oldest backups until there are only MAX_BACKUPS backups remaining
 prune_old_backups() {
-    local volume=$1
-    local backups=( "${BACKUP_DIR}/${volume}_"*".tar.gz" )  # array of backups
+	local volume=$1
+	local backups=("${BACKUP_DIR}/${volume}_"*".tar.gz") # array of backups
 
-    # only proceed if there are more backups than MAX_BACKUPS
-    if (( ${#backups[@]} > MAX_BACKUPS )); then
-        local to_delete_count=$(( ${#backups[@]} - MAX_BACKUPS ))
-        log_to_file "Pruning ${to_delete_count} old backup(s) for ${volume}." "${LOG_FILE}"
+	# only proceed if there are more backups than MAX_BACKUPS
+	if ((${#backups[@]} > MAX_BACKUPS)); then
+		local to_delete_count=$((${#backups[@]} - MAX_BACKUPS))
+		log_to_file "Pruning ${to_delete_count} old backup(s) for ${volume}." "${LOG_FILE}"
 
-        # 🚨 -- 🤖 below! -- 🚨
-        # finds the tarfiles for the current volume in the backup directory + prints timestamps
-        find "$BACKUP_DIR" -maxdepth 1 -type f -name "${volume}_*.tar.gz" -printf "%T@ %p\n" | \
-            # sorts the files by the timestamps
-            sort -n | \
-            # trims to the number of files we have to delete
-            head -n "$to_delete_count" | \
-            # strips the timestamps
-            cut -d ' ' -f 2- | \
-            # removes the files
-            xargs -d '\n' rm -f --
-    fi
+		# 🚨 -- 🤖 below! -- 🚨
+		# finds the tarfiles for the current volume in the backup directory + prints timestamps
+		find "$BACKUP_DIR" -maxdepth 1 -type f -name "${volume}_*.tar.gz" -printf "%T@ %p\n" |
+			# sorts the files by the timestamps
+			sort -n |
+			# trims to the number of files we have to delete
+			head -n "$to_delete_count" |
+			# strips the timestamps
+			cut -d ' ' -f 2- |
+			# removes the files
+			xargs -d '\n' rm -f --
+	fi
 }
 
 run_volume_backups() {
-    # ensure backup directory exists (in case mount is lost)
-    if ! mountpoint -q "/mnt/backups"; then
-        log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
-        return 1
-    fi
+	# ensure backup directory exists (in case mount is lost)
+	if ! mountpoint -q "/mnt/backups"; then
+		log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
+		return 1
+	fi
 
-    # clear all unused volumes so we don't back up anything not needed
-    docker volume prune --force
+	# clear all unused volumes so we don't back up anything not needed
+	docker volume prune --force
 
-    # get a list of all of the volumes
-    VOLUMES=$(docker volume ls --format "{{.Name}}")
+	# get a list of all of the volumes
+	VOLUMES=$(docker volume ls --format "{{.Name}}")
 
-    for VOLUME in $VOLUMES; do
-        log_to_file "Backing up volume: ${VOLUME}." "${LOG_FILE}"
+	for VOLUME in $VOLUMES; do
+		log_to_file "Backing up volume: ${VOLUME}." "${LOG_FILE}"
 
-        # create a temporary container and use it to archive the volume
-        BACKUP_FILESTEM="${VOLUME}_${TIMESTAMP}"
-        docker run --rm \
-            -v "${VOLUME}":/data \
-            -v "${BACKUP_DIR}":/backup \
-            alpine \
-            tar czf "/backup/${BACKUP_FILESTEM}.tar.gz" -C /data .
+		# create a temporary container and use it to archive the volume
+		BACKUP_FILESTEM="${VOLUME}_${TIMESTAMP}"
+		docker run --rm \
+			-v "${VOLUME}":/data \
+			-v "${BACKUP_DIR}":/backup \
+			alpine \
+			tar czf "/backup/${BACKUP_FILESTEM}.tar.gz" -C /data .
 
-        prune_old_backups "${VOLUME}"  # clean old volumes
-    done
+		prune_old_backups "${VOLUME}" # clean old volumes
+	done
 
-    log_to_file "Backups completed successfully!" "${LOG_FILE}"
+	log_to_file "Backups completed successfully!" "${LOG_FILE}"
 }
 
 # call the function, then "chain" calls to update ntfy
 # https://docs.ntfy.sh/examples/#cronjobs
-run_volume_backups \
-    && clean_log_file "${LOG_FILE}" \
-    && curl \
-    -H "Authorization: Bearer ${NTFY_TOKEN}" \
-    -H "Title: Volume Backups Succeeded" \
-    -H "Priority: low" \
-    -H "Tags: package" \
-    -d "All Docker volume backups completed successfully." \
-    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}" \
-    || curl \
-    -H "Authorization: Bearer ${NTFY_TOKEN}" \
-    -H "Title: Volume Backups Failed" \
-    -H "Priority: high" \
-    -H "Tags: warning,rotating_light" \
-    -d "Docker volume backup script encountered an error!" \
-    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}"
+run_volume_backups &&
+	clean_log_file "${LOG_FILE}" &&
+	curl \
+		-H "Authorization: Bearer ${NTFY_TOKEN}" \
+		-H "Title: Volume Backups Succeeded" \
+		-H "Priority: low" \
+		-H "Tags: package" \
+		-d "All Docker volume backups completed successfully." \
+		"https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}" ||
+	curl \
+		-H "Authorization: Bearer ${NTFY_TOKEN}" \
+		-H "Title: Volume Backups Failed" \
+		-H "Priority: high" \
+		-H "Tags: warning,rotating_light" \
+		-d "Docker volume backup script encountered an error!" \
+		"https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}"

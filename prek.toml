@@ -1,3 +1,27 @@
+# ==============================================================================
+# Built-in hooks
+# ==============================================================================
+[[repos]]
+repo = "builtin"
+hooks = [
+    { id = "trailing-whitespace" },
+    { id = "end-of-file-fixer" },
+    { id = "check-yaml" },
+    { id = "check-toml" },
+    { id = "check-json" },
+    { id = "check-merge-conflict" },
+    { id = "check-case-conflict" },
+    { id = "detect-private-key" },
+    { id = "check-added-large-files", args = [
+        "--maxkb=500",
+    ] },
+    { id = "check-shebang-scripts-are-executable" },
+    { id = "check-executables-have-shebangs" },
+]
+
+# ==============================================================================
+# Security: Secrets Scanning
+# ==============================================================================
 [[repos]]
 repo = "https://github.com/Yelp/detect-secrets"
 rev = "v1.5.0"
@@ -16,3 +40,52 @@ args = [
     "--exclude-files",
     "football-pool/migrations",
 ]
+
+# ==============================================================================
+# Shell Scripts: Static Analysis & Formatting
+# ==============================================================================
+[[repos]]
+repo = "https://github.com/koalaman/shellcheck-precommit"
+rev = "v0.10.0"
+
+[[repos.hooks]]
+id = "shellcheck"
+args = ["--severity=warning"] # Only warn/fail on actual hazards
+
+[[repos]]
+repo = "https://github.com/scop/pre-commit-shfmt"
+rev = "v3.14.1-1"
+
+[[repos.hooks]]
+id = "shfmt"
+
+# ==============================================================================
+# Python: Linting & Formatting
+# ==============================================================================
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.9.9"
+
+[[repos.hooks]]
+id = "ruff"
+args = ["--fix"]
+
+[[repos.hooks]]
+id = "ruff-format"
+
+# ==============================================================================
+# GitHub Actions Linting
+# ==============================================================================
+[[repos]]
+repo = "https://github.com/hadolint/hadolint"
+rev = "v2.12.0"
+
+[[repos.hooks]]
+id = "hadolint"
+
+[[repos]]
+repo = "https://github.com/rhysd/actionlint"
+rev = "v1.7.12"
+
+[[repos.hooks]]
+id = "actionlint"

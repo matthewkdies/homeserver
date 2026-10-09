@@ -34,17 +34,13 @@ class CleanupStats:
     warnings: list[str] = field(default_factory=list)
 
 
-def send_ntfy_notification(
-    title: str, message: str, priority: str = "low", tags: str = "broom"
-) -> None:
+def send_ntfy_notification(title: str, message: str, priority: str = "low", tags: str = "broom") -> None:
     """Sends a push notification via Ntfy using standard library urllib."""
     token = os.environ.get("NTFY_TOKEN")
     topic = os.environ.get("NTFY_SERVER_HEALTH_TOPIC")
 
     if not topic:
-        logger.warning(
-            "NTFY_SERVER_HEALTH_TOPIC env var not set; skipping Ntfy notification."
-        )
+        logger.warning("NTFY_SERVER_HEALTH_TOPIC env var not set; skipping Ntfy notification.")
         return
 
     url = f"https://ntfy.mattdies.com/{topic}"
@@ -92,23 +88,17 @@ def rename_forced_subs(content_dir: Path, stats: CleanupStats) -> None:
                             forced_file.name,
                         )
                     else:
-                        logger.info(
-                            "Deleting duplicate forced subtitle: '%s'", forced_file.name
-                        )
+                        logger.info("Deleting duplicate forced subtitle: '%s'", forced_file.name)
                         forced_file.unlink()
                     stats.forced_deleted += 1
 
                 # Check for abnormally large forced subtitle file
                 elif forced_size > (orig_size * 0.4):
-                    warn_msg = (
-                        f"Large forced sub skipped (check manually): {forced_file.name}"
-                    )
+                    warn_msg = f"Large forced sub skipped (check manually): {forced_file.name}"
                     logger.warning(warn_msg)
                     stats.warnings.append(warn_msg)
                 else:
-                    target_forced = Path(
-                        str(forced_file).replace(f".2.{lang}.srt", ".eng.forced.srt")
-                    )
+                    target_forced = Path(str(forced_file).replace(f".2.{lang}.srt", ".eng.forced.srt"))
                     if DRY_RUN:
                         logger.info(
                             "[DRY RUN] Would rename forced sub: '%s' -> '%s'",
@@ -225,9 +215,7 @@ def main() -> None:
     target_dirs = [Path(arg) for arg in sys.argv[1:]]
 
     if not target_dirs:
-        logger.error(
-            "No target directories provided. Usage: python media_cleaner.py <dir1> [dir2 ...]"
-        )
+        logger.error("No target directories provided. Usage: python media_cleaner.py <dir1> [dir2 ...]")
         sys.exit(1)
 
     if DRY_RUN:
@@ -263,11 +251,7 @@ def main() -> None:
 
         message = "\n".join(msg_lines)
         priority = "low" if not total_stats.warnings else "default"
-        tags = (
-            "test_tube,broom"
-            if DRY_RUN
-            else ("movie_camera,broom" if not total_stats.warnings else "warning,broom")
-        )
+        tags = "test_tube,broom" if DRY_RUN else ("movie_camera,broom" if not total_stats.warnings else "warning,broom")
 
         send_ntfy_notification(
             title=f"{prefix}Media Cleanup Finished",

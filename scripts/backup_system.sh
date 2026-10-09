@@ -16,37 +16,37 @@ set -e
 LOG_FILE="${DOCKER_DIR}/log/backup_system.log"
 BACKUP_DIR="/mnt/backups/system"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-MAX_BACKUPS=7  
+MAX_BACKUPS=7
 
 # remove the oldest backups until there are only MAX_BACKUPS backups remaining
 prune_old_backups() {
-    # Using a nullglob ensures that if no files match, the array is empty instead of containing the literal string
-    shopt -s nullglob
-    local backups=( "${BACKUP_DIR}"/system_backup_*.tar.gz )
-    shopt -u nullglob
+	# Using a nullglob ensures that if no files match, the array is empty instead of containing the literal string
+	shopt -s nullglob
+	local backups=("${BACKUP_DIR}"/system_backup_*.tar.gz)
+	shopt -u nullglob
 
-    if (( ${#backups[@]} > MAX_BACKUPS )); then
-        local to_delete_count=$(( ${#backups[@]} - MAX_BACKUPS ))
-        log_to_file "Pruning ${to_delete_count} old backup(s) for system." "${LOG_FILE}"
+	if ((${#backups[@]} > MAX_BACKUPS)); then
+		local to_delete_count=$((${#backups[@]} - MAX_BACKUPS))
+		log_to_file "Pruning ${to_delete_count} old backup(s) for system." "${LOG_FILE}"
 
-        # 🚨 -- 🤖 below! -- 🚨
-        # finds the tarfiles for the current volume in the backup directory + prints timestamps
-        find "$BACKUP_DIR" -maxdepth 1 -type f -name "system_backup_*.tar.gz" -printf "%T@ %p\n" | \
-            # sorts the files by the timestamps
-            sort -n | \
-            # trims to the number of files we have to delete
-            head -n "$to_delete_count" | \
-            # strips the timestamps
-            cut -d ' ' -f 2- | \
-            # removes the files
-            xargs -d '\n' rm -f --
-    fi
+		# 🚨 -- 🤖 below! -- 🚨
+		# finds the tarfiles for the current volume in the backup directory + prints timestamps
+		find "$BACKUP_DIR" -maxdepth 1 -type f -name "system_backup_*.tar.gz" -printf "%T@ %p\n" |
+			# sorts the files by the timestamps
+			sort -n |
+			# trims to the number of files we have to delete
+			head -n "$to_delete_count" |
+			# strips the timestamps
+			cut -d ' ' -f 2- |
+			# removes the files
+			xargs -d '\n' rm -f --
+	fi
 }
 
 # Ensure backup directory exists
 if ! mountpoint -q "/mnt/backups"; then
-    log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
-    exit 1
+	log_to_file "ERROR: Backup directory is not mounted!" "${LOG_FILE}"
+	exit 1
 fi
 
 log_to_file "Beginning system backup at ${TIMESTAMP}." "${LOG_FILE}"
@@ -65,19 +65,19 @@ log_to_file "Backup completed successfully!" "${LOG_FILE}"
 
 # call the function, then "chain" calls to update ntfy
 # https://docs.ntfy.sh/examples/#cronjobs
-prune_old_backups \
-    && clean_log_file "${LOG_FILE}" \
-    && curl \
-    -H "Authorization: Bearer ${NTFY_TOKEN}" \
-    -H "Title: System Backup Succeeded" \
-    -H "Priority: low" \
-    -H "Tags: floppy_disk" \
-    -d "Server file system backup completed successfully." \
-    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}" \
-    || curl \
-    -H "Authorization: Bearer ${NTFY_TOKEN}" \
-    -H "Title: System Backup Failed" \
-    -H "Priority: high" \
-    -H "Tags: warning,rotating_light" \
-    -d "Server file system backup failed!" \
-    "https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}"
+prune_old_backups &&
+	clean_log_file "${LOG_FILE}" &&
+	curl \
+		-H "Authorization: Bearer ${NTFY_TOKEN}" \
+		-H "Title: System Backup Succeeded" \
+		-H "Priority: low" \
+		-H "Tags: floppy_disk" \
+		-d "Server file system backup completed successfully." \
+		"https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}" ||
+	curl \
+		-H "Authorization: Bearer ${NTFY_TOKEN}" \
+		-H "Title: System Backup Failed" \
+		-H "Priority: high" \
+		-H "Tags: warning,rotating_light" \
+		-d "Server file system backup failed!" \
+		"https://ntfy.mattdies.com/${NTFY_BACKUPS_TOPIC}"

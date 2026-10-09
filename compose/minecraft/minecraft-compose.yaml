@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------------------
 # We all love Minecraft! Moira and I both have Java edition so I only host that version.
-# This was fairly hard to get working, surprisingly. It also requires maintenance when 
+# This was fairly hard to get working, surprisingly. It also requires maintenance when
 # Minecraft needs updated, as the container won't start if it's been too long since an
-# update. 
-# 
+# update.
+#
 # Notes:
 #  - `JVM_XX_OPTS`: set to optimize the server for running specifically on a Synology NAS
 #  - changing difficulty, whitelist, etc. sometimes requires change here + `exec` -> CLI

@@ -13,16 +13,16 @@ echo "Fetching latest Sunshine release info..."
 latest_json=$(curl -s https://api.github.com/repos/LizardByte/Sunshine/releases/latest)
 
 # Identify the asset matching ubuntu-24.04-amd64.deb (or generic amd64)
-asset_url=$(echo "$latest_json" \
-  | jq -r '.assets[]
+asset_url=$(echo "$latest_json" |
+	jq -r '.assets[]
       | select(.name | test("ubuntu-24\\.04-amd64\\.deb$"))
       | .browser_download_url')
 
 if [[ -z "$asset_url" || "$asset_url" == "null" ]]; then
-  echo "⚠️ Cannot find the ubuntu‑24.04‑amd64 deb in the latest release."
-  echo "Available assets:"
-  echo "$latest_json" | jq -r '.assets[].name'
-  exit 1
+	echo "⚠️ Cannot find the ubuntu‑24.04‑amd64 deb in the latest release."
+	echo "Available assets:"
+	echo "$latest_json" | jq -r '.assets[].name'
+	exit 1
 fi
 
 echo "Found asset: $asset_url"

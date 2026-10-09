@@ -21,4 +21,4 @@ chown 148:142 /var/log/myapp-stdout.log /var/log/myapp-stderr.log
 # use su-exec to change ownership and then run the other entrypoint stuff:
 # script that sets the env vars based on Docker secrets
 # any other args passed to it
-exec su-exec 148:142 /usr/local/bin/set_secret_vars.sh "$@" > /var/log/myapp-stdout.log 2> /var/log/myapp-stderr.log
+exec su-exec 148:142 /usr/local/bin/set_secret_vars.sh "$@" >/var/log/myapp-stdout.log 2>/var/log/myapp-stderr.log

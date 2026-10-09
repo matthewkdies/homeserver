@@ -107,9 +107,7 @@ def send_ntfy_notification(
             print(f"  ✓ ntfy notification sent to topic '{topic}'.")
             return True
         else:
-            print(
-                f"  [!] Failed to send ntfy notification: HTTP {response.status_code}"
-            )
+            print(f"  [!] Failed to send ntfy notification: HTTP {response.status_code}")
             return False
     except requests.RequestException as e:
         print(f"  [!] Connection error sending ntfy notification: {e}")
@@ -141,9 +139,7 @@ def main():
                 print(f"  ❌ ALERT: {new_count} NEW breach(es) found! Total: {count}")
                 print(f"     Breaches: {', '.join(breaches)}")
             elif count > 0:
-                print(
-                    f"  ⚠️  Known issues: Currently in {count} breach(es) (No new ones)."
-                )
+                print(f"  ⚠️  Known issues: Currently in {count} breach(es) (No new ones).")
             else:
                 print("  ✓ Clean! No breaches found.")
         else:
