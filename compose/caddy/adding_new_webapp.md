@@ -31,25 +31,24 @@ Luckily, I've already got a local DNS... two of them actually!
 It's easy to forget that Pi-hole is a DNS because it gets a reputation as an "ad-blocker".
 Which it is, but it does it as a DNS sinkhole, a.k.a. a server!
 
-**This means we need to register local DNS A records on both of the Pi-hole servers for each new web-app.**
-Navigate to `/admin/dns_records.php` in order to add new domain registrations.
-Add the relevant domain and IP address to the relevant boxes and click "Add".
-In this case, the domain is the desired domain for the application that you're configuring in Caddy and the IP address should be the local IP address of the device running the application.
+**Thanks to a wildcard dnsmasq configuration, you no longer need to manually register local DNS A records for each new web-app!**
+All subdomains of `mattdies.com` automatically resolve to Caddy's local IP address (`10.144.88.102`).
 
-### AAAA (IPv6) Records
-Many public DNS services will route for both IPv4 and IPv6.
-If you're like me and don't have IPv6 within the network, you'll have to prevent Pi-hole from using the available AAAA records for the domain name.
-Otherwise, Pi-hole will allow the request but may use the AAAA record from Cloudflare, rather than the local A record we just set up.
-This means that despite our local DNS records, the traffic may still leave your network and you will be met with a 403 when accessing your webpages.
+### dnsmasq Configuration (`99-routing.conf`)
+Many public DNS services will route for both IPv4 and IPv6. If you don't have IPv6 internally, Pi-hole might query upstream and use Cloudflare's AAAA record rather than routing locally, causing requests to bounce outside and fail internal-only ACLs (403 error).
 
-To solve this, you can add a custom `99-local-no-use-AAAA.conf` file to the `/etc/dnsmasq.d` directory within the container, like so.
-```env
-# Keep domain_name.com and all subdomains local, and disable IPv6
-local=/domain_name.com/
+To prevent this and automatically route all subdomains to Caddy without registering each one individually, we maintain `99-routing.conf` in `/etc/dnsmasq.d` on both Pi-hole instances:
+
+```conf
+# Keep domain_name.com and all subdomains local, and disable IPv6 upstream queries
+local=/mattdies.com/
+
+# Wildcard A-record: routes mattdies.com and all subdomains (*.mattdies.com) to Caddy
+address=/mattdies.com/10.144.88.102
 ```
-Of course, you should change this to your domain as needed.
-This will cover all subdomains of the domain as well, e.g., `auth.domain_name.com`.
-If you're running Pi-hole in Docker, you'll have to make sure that this file is stored within a volume mount so that the changes persist when the container is stopped.
+
+This covers `mattdies.com` and all subdomains (e.g., `auth.mattdies.com`, `mealie.mattdies.com`), meaning any new service added to Caddy is resolved locally out of the box.
+
 
 ## Public DNS Records
 ### Manual (Not Recommended)
