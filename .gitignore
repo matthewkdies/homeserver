@@ -15,3 +15,6 @@ compose/arr-suite/vuetorrent
 compose/football-pool/football-pool
 compose/mealie/mealie_source
 compose/arr-suite/vuetorrent
+
+# local scratch / superpowers tooling
+.superpowers/
