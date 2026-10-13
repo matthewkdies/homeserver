@@ -541,26 +541,6 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  # sports channel and dynamic EPG generator for Dispatcharr
-  teamarr:
-    image: ghcr.io/pharaoh-labs/teamarr:latest
-    container_name: teamarr
-    hostname: teamarr
-    restart: unless-stopped
-    environment:
-      - TZ=America/New_York
-    volumes:
-      - teamarr_data:/app/data
-    expose:
-      - 9195
-    networks:
-      webapps:
-        ipv4_address: 172.19.0.28 # static IP for in-app config
-    security_opt:
-      - no-new-privileges:true
-    depends_on:
-      - dispatcharr
-
     # # generates summaries, like a certain music streaming service every year
   # wrapperr:
   #   image: ghcr.io/aunefyren/wrapperr:latest
@@ -599,7 +579,6 @@ volumes:
   meloday_config:
   maintainerr_config:
   dispatcharr_data:
-  teamarr_data:
 
 networks:
   webapps:

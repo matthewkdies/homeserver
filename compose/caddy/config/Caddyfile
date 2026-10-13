@@ -273,14 +273,6 @@ dispatcharr.mattdies.com {
 	reverse_proxy gluetun:9191
 }
 
-teamarr.mattdies.com {
-	import use_authelia
-	import cloudflare_dns
-	import local_network_only
-	import log_for_app "teamarr"
-	reverse_proxy teamarr:9195
-}
-
 # will bring this back near the end of every year
 # wrapperr.mattdies.com {
 # 	import cloudflare_dns
