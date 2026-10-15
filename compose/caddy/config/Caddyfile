@@ -266,10 +266,27 @@ maintainerr.mattdies.com {
 }
 
 dispatcharr.mattdies.com {
-	import use_authelia
 	import cloudflare_dns
-	import local_network_only
 	import log_for_app "dispatcharr"
+
+	@external {
+		not path /api/channels/logos/*
+		not remote_ip 10.144.88.0/24 172.19.0.0/16
+	}
+	respond @external 403 {
+		close
+	}
+
+	@authelia {
+		not path /output/*
+		not path /api/channels/logos/*
+		not path /hdhr/*
+	}
+	forward_auth @authelia authelia:9091 {
+		uri /api/authz/forward-auth
+		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+	}
+
 	reverse_proxy gluetun:9191
 }
 
