@@ -2,6 +2,7 @@ docker
 fail2ban
 **/congrats.md
 data
+.env
 
 # ah, VSCode
 .vscode/settings.json
