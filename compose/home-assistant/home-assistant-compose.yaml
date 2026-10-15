@@ -25,5 +25,41 @@ services:
     # privileged: true grants the container access to underlying system hardware
     # useful for USB Zigbee/Z-Wave dongles or Bluetooth adapters
     privileged: true
-    network_mode: host
+    expose:
+      - 8123 # Home Assistant Web UI & API
+    networks:
+      - webapps
     restart: unless-stopped
+
+  zwave-js-ui:
+    image: zwavejs/zwave-js-ui:latest
+    container_name: zwave-js-ui
+    hostname: zwave-js-ui
+    tty: true
+    stop_signal: SIGINT
+    environment:
+      TZ: America/New_York
+      SESSION_SECRET: ${ZWAVE_SESSION_SECRET}
+      ZWAVE_JS_EXTERNAL_CONFIG: /usr/src/app/store/.config-db
+      TRUST_PROXY: "1"
+      ZWAVE_PORT: /dev/zwave
+    devices:
+      - /dev/serial/by-id/usb-Zooz_800_Z-Wave_Stick_533D004242-if00:/dev/zwave
+    volumes:
+      - zwave-config:/usr/src/app/store
+    expose:
+      - 8091 # Web Management UI
+      - 3000 # WebSocket API for Home Assistant
+    networks:
+      - webapps
+      - zwave
+    restart: unless-stopped
+
+networks:
+  webapps:
+    external: true
+  zwave:
+
+volumes:
+  zwave-config:
+    name: zwave-config

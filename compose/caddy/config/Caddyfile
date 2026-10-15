@@ -137,11 +137,20 @@ llm.mattdies.com {
 	import log_for_app "llm"
 	reverse_proxy open-webui:8080
 }
+
 homeassistant.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "homeassistant"
 	import local_network_only
-	reverse_proxy 10.144.88.102:8123
+	reverse_proxy homeassistant:8123
+}
+
+zwave.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import log_for_app "zwave"
+	import local_network_only
+	reverse_proxy zwave-js-ui:8091
 }
 
 # ------------------------------------------------

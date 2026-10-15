@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2026/10/14
 
+### Added
+
+- [zwave-js-ui](https://github.com/zwave-js/zwave-js-ui), a Z-Wave control panel enabling integration with Plex.
+
 ### Fixed
 
 - Plex can now properly access the EPG information + logos from Dispatcharr.
