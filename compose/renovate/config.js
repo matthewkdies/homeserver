@@ -12,6 +12,8 @@ module.exports = {
   gitAuthor: 'Renovate Bot <renovate@mattdies.com>',
   onboarding: false,
   requireConfig: 'optional',
+  extends: ['config:recommended', 'docker:pinDigests'],
+  pinDigests: true,
   'docker-compose': {
     managerFilePatterns: [
       '/(^|/)[^/]+-compose\\.ya?ml$/',
