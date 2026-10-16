@@ -1,0 +1,28 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "dependencyDashboard": true,
+  "timezone": "America/New_York",
+  "pinDigests": true,
+  "minimumReleaseAge": "3 days",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "labels": ["dependencies", "automerge"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "commitMessagePrefix": "chore(deps)!: ",
+      "labels": ["dependencies", "major-update", "needs-review"],
+      "prBodyNotes": [
+        "⚠️ **Major version upgrade**: Please review upstream breaking changes and migration guides before merging."
+      ]
+    }
+  ]
+}
