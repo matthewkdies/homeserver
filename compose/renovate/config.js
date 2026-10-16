@@ -20,6 +20,20 @@ module.exports = {
       '/(^|/)(?:docker-)?compose[^/]*\\.ya?ml$/',
     ],
   },
+  packageRules: [
+    {
+      description: 'Calendar Versioning for Pi-hole and Home Assistant',
+      matchDatasources: ['docker'],
+      matchPackageNames: [
+        'pihole/pihole',
+        'homeassistant/home-assistant',
+        'ghcr.io/home-assistant/home-assistant',
+      ],
+      versioning:
+        'regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d+)(?:-(?<compatibility>.+))?$',
+      separateMajorMinor: false,
+    },
+  ],
   persistRepoData: true,
   cacheDir: '/tmp/renovate/cache',
 };
