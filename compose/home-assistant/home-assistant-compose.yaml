@@ -28,7 +28,8 @@ services:
     expose:
       - 8123 # Home Assistant Web UI & API
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.28
     restart: unless-stopped
 
   zwave-js-ui:
@@ -51,8 +52,9 @@ services:
       - 8091 # Web Management UI
       - 3000 # WebSocket API for Home Assistant
     networks:
-      - webapps
-      - zwave
+      webapps:
+        ipv4_address: 172.19.0.29
+      zwave:
     restart: unless-stopped
 
 networks:
