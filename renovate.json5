@@ -7,6 +7,12 @@
   "timezone": "America/New_York",
   "pinDigests": true,
   "minimumReleaseAge": "3 days",
+  "docker-compose": {
+    "managerFilePatterns": [
+      "/(^|/)[^/]+-compose\\.ya?ml$/",
+      "/(^|/)(?:docker-)?compose[^/]*\\.ya?ml$/"
+    ]
+  },
   "packageRules": [
     {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
