@@ -30,14 +30,13 @@ services:
   authelia:
     container_name: authelia
     image: authelia/authelia:4.39.28
+    user: "128:129"
     expose:
       - 9091
     volumes:
       - ${DOCKER_DIR}/authelia:/config
     environment:
       TZ: America/New_York
-      PUID: 128
-      PGID: 129
       AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_providers_oidc_hmac_secret
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
@@ -59,10 +58,16 @@ services:
     read_only: true
     tmpfs:
       - /tmp
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
     healthcheck:
-      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:9091/api/health || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://localhost:9091/api/health || exit 1",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
