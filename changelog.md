@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026/10/15
+
+### Changed
+
+- Upgraded Authelia to 4.39.28.
+- Migrated Authelia database to Postgres.
+- Increased security of Authelia by using read-only filesystem and mounting a temp file system.
+- Switched from `PUID` and `PGID` environment variables to dedicated Authelia user on host.
+
 ## [1.5.0] - 2026/10/14
 
 ### Added
