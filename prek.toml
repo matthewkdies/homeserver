@@ -89,4 +89,3 @@ rev = "v1.7.12"
 
 [[repos.hooks]]
 id = "actionlint"
-exclude = "^\\.github/workflows/automatic-versioning\\.yaml$"
