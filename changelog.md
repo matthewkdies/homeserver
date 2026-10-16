@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0] - 2026/10/15
 
+### Added
+
+- [Renovate](https://github.com/renovatebot/renovate) to handle updating images and creating PRs on my GitHub automatically.
+
 ### Changed
 
 - Upgraded Authelia to 4.39.28.
