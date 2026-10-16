@@ -27,7 +27,8 @@ Unit definitions are version-controlled in `compose/renovate/systemd/`.
 ### Setup
 ```bash
 mkdir -p ~/.config/systemd/user
-cp compose/renovate/systemd/* ~/.config/systemd/user/
+ln -sf /home/matthewkdies/Documents/compose/renovate/systemd/renovate.service ~/.config/systemd/user/renovate.service
+ln -sf /home/matthewkdies/Documents/compose/renovate/systemd/renovate.timer ~/.config/systemd/user/renovate.timer
 systemctl --user daemon-reload
 systemctl --user enable --now renovate.timer
 ```

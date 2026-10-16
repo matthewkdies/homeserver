@@ -76,12 +76,12 @@ id = "ruff-format"
 # ==============================================================================
 # GitHub Actions Linting
 # ==============================================================================
-[[repos]]
-repo = "https://github.com/hadolint/hadolint"
-rev = "v2.12.0"
-
-[[repos.hooks]]
-id = "hadolint"
+# [[repos]]
+# repo = "https://github.com/hadolint/hadolint"
+# rev = "v2.12.0"
+#
+# [[repos.hooks]]
+# id = "hadolint"
 
 [[repos]]
 repo = "https://github.com/rhysd/actionlint"
@@ -89,3 +89,4 @@ rev = "v1.7.12"
 
 [[repos.hooks]]
 id = "actionlint"
+exclude = "^\\.github/workflows/automatic-versioning\\.yaml$"

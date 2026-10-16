@@ -19,6 +19,7 @@
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true,
+      "ignoreTests": true,
       "labels": ["dependencies", "automerge"]
     },
     {
