@@ -43,5 +43,6 @@
         "⚠️ **Major version upgrade**: Please review upstream breaking changes and migration guides before merging."
       ]
     }
-  ]
+  ],
+  "prConcurrentLimit": 20
 }
