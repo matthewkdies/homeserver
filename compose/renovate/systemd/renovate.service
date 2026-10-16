@@ -1,0 +1,13 @@
+[Unit]
+Description=Renovate Self-Hosted Dependency Update Runner
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/matthewkdies/Documents/compose/renovate
+EnvironmentFile=/home/matthewkdies/.envvars
+ExecStart=/usr/bin/docker compose --file renovate-compose.yaml run --rm renovate
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

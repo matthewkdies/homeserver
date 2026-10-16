@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily Renovate Runner Timer
+
+[Timer]
+OnCalendar=*-*-* 04:00:00
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

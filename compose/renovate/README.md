@@ -19,3 +19,31 @@ To run with full dry-run logging (no PRs or commits created):
 . ~/.envvars
 docker compose --file /home/matthewkdies/Documents/compose/renovate/renovate-compose.yaml run --rm renovate renovate --dry-run=full
 ```
+
+## Automation (Systemd User Timer)
+Automated daily execution is managed via a systemd user timer (`~/.config/systemd/user/renovate.timer`), scheduled for 04:00 AM daily with a 10-minute randomized delay.
+Unit definitions are version-controlled in `compose/renovate/systemd/`.
+
+### Setup
+```bash
+mkdir -p ~/.config/systemd/user
+cp compose/renovate/systemd/* ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now renovate.timer
+```
+
+### Checking Status & Logs
+Check timer status and next trigger:
+```bash
+systemctl --user list-timers renovate.timer
+```
+
+Trigger an immediate execution via systemd:
+```bash
+systemctl --user start renovate.service
+```
+
+Inspect execution logs:
+```bash
+journalctl --user -u renovate.service -e
+```
