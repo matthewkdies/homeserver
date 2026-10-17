@@ -11,7 +11,7 @@
 
 services:
   uptime-kuma:
-    image: louislam/uptime-kuma:2
+    image: louislam/uptime-kuma:2@sha256:9912da7d7d9b6ddc0c2d904beb84d24689c1ed9c33b81419eb9008663a92a329
     container_name: uptime_kuma
     hostname: uptime_kuma
     labels:
@@ -38,7 +38,7 @@ services:
     restart: unless-stopped
 
   uptime-socket-proxy:
-    image: tecnativa/docker-socket-proxy
+    image: tecnativa/docker-socket-proxy@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
     container_name: uptime-socket-proxy
     hostname: docker-socket-proxy
     privileged: true

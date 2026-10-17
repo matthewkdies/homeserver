@@ -29,7 +29,7 @@ secrets:
 services:
   authelia:
     container_name: authelia
-    image: authelia/authelia:4.39.28
+    image: authelia/authelia:4.39.28@sha256:bd97cff4fcbf715b5ff1f9ae286afbe6033afce385302520b0368122d43a6f54
     user: "128:129"
     expose:
       - 9091
