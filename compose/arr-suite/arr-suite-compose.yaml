@@ -42,7 +42,7 @@ secrets:
 services:
   # tv show monitoring + management
   sonarr:
-    image: linuxserver/sonarr:latest@sha256:44b06045a98bc1f237b9ffefc4b28dab64cb29305e4a2a94875ae93b5224e4cc
+    image: linuxserver/sonarr:4.0.20.3014-ls328@sha256:0deb8db6c839ac475e9cd86277712772c40ba7f929a003d7e1de36c4b666bc13
     container_name: sonarr
     hostname: sonarr
     environment:
@@ -73,7 +73,7 @@ services:
 
   # movie monitoring + management
   radarr:
-    image: linuxserver/radarr:latest@sha256:ea6822c956d26db648b237919f41340318f32e5b7dcc4ba702cf256a0f5f3c12
+    image: linuxserver/radarr:6.4.4.10685-ls320@sha256:cfbc4fa09dc9d78f7cedc898f4ec48c6277cacedc523c4e159db6ff1c741959c
     container_name: radarr
     hostname: radarr
     environment:
@@ -103,7 +103,7 @@ services:
     restart: unless-stopped
 
   radarr4k:
-    image: linuxserver/radarr:latest@sha256:ea6822c956d26db648b237919f41340318f32e5b7dcc4ba702cf256a0f5f3c12
+    image: linuxserver/radarr:6.4.4.10685-ls320@sha256:cfbc4fa09dc9d78f7cedc898f4ec48c6277cacedc523c4e159db6ff1c741959c
     container_name: radarr4k
     hostname: radarr4k
     environment:
@@ -133,7 +133,7 @@ services:
 
   # music monitoring + management
   lidarr:
-    image: linuxserver/lidarr:latest@sha256:67887807b13ae025c0fe979da298347c8609969087ab064c81d8e9acc1e06bbf
+    image: linuxserver/lidarr:3.1.0.4875-ls43@sha256:67887807b13ae025c0fe979da298347c8609969087ab064c81d8e9acc1e06bbf
     container_name: lidarr
     hostname: lidarr
     environment:
@@ -164,7 +164,7 @@ services:
 
   # torrent client monitoring + management
   prowlarr:
-    image: linuxserver/prowlarr:latest@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902
+    image: linuxserver/prowlarr:2.6.5.5623-ls163@sha256:f9151e5bc1025c6d0a630d503210cdcb6bb55a7cc098562609d96a408d838902
     container_name: prowlarr
     hostname: prowlarr
     environment:
@@ -190,7 +190,7 @@ services:
 
   # subtitle monitoring + management
   bazarr:
-    image: linuxserver/bazarr:latest@sha256:fb0437897eaa7f96cf6ac42f795f8dcc208d34ec969eac5d366454e767304eb9
+    image: linuxserver/bazarr:v1.6.2-ls368@sha256:fb0437897eaa7f96cf6ac42f795f8dcc208d34ec969eac5d366454e767304eb9
     container_name: bazarr
     hostname: bazarr
     environment:
@@ -220,7 +220,7 @@ services:
 
   # content request monitoring + management
   seerr:
-    image: ghcr.io/seerr-team/seerr:latest@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45
+    image: ghcr.io/seerr-team/seerr:v3.5.0@sha256:27602401178d54f1964442287b9f23f67a3fa2252645ee8065839ea1c3f69e45
     init: true
     container_name: seerr
     hostname: seerr
@@ -300,7 +300,7 @@ services:
 
   # helps to bypass Cloudflare protection used by many indexers
   flaresolverr:
-    image: flaresolverr/flaresolverr:latest@sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
+    image: flaresolverr/flaresolverr:v3.5.2@sha256:c80ae007ce2ccdcd217a12426e4f039ef763ff90738c808d38810c3e59323767
     container_name: flaresolverr
     hostname: flaresolverr
     environment:
@@ -372,7 +372,7 @@ services:
 
   # torrenting client
   qbittorrent:
-    image: linuxserver/qbittorrent:latest@sha256:97333cc1ccf903e0bbcd8eb67e3332e4970e9c1ecabe145e499e9c0847ebcaed
+    image: linuxserver/qbittorrent:5.2.4_v2.0.15-ls480@sha256:97333cc1ccf903e0bbcd8eb67e3332e4970e9c1ecabe145e499e9c0847ebcaed
     container_name: qbittorrent
     environment:
       PUID: 142
@@ -402,7 +402,7 @@ services:
 
   # connects to the soulseek network to download royalty-free music
   soulseek:
-    image: slskd/slskd:latest@sha256:588af49abc3088d639c8f1174d3bfad6e92c093a275a593140e3ac9311ebf6c4
+    image: slskd/slskd:0.26.1@sha256:588af49abc3088d639c8f1174d3bfad6e92c093a275a593140e3ac9311ebf6c4
     container_name: soulseek
     hostname: soulseek
     expose:
@@ -476,7 +476,7 @@ services:
 
   # monitoring dashboard
   tautulli:
-    image: linuxserver/tautulli:latest@sha256:986125e67ab881504e6a71f93f8fe0932de0e1158f3060b53ca9d12ab38fa3be
+    image: linuxserver/tautulli:v2.18.2-ls247@sha256:d3c53deb09f6b8fffd1476c7154da538394193955d1e909f3b126068102fb7cf
     container_name: tautulli
     hostname: tautulli
     environment:
@@ -496,7 +496,7 @@ services:
 
   # deletes content based on rules configured in a web GUI
   maintainerr:
-    image: ghcr.io/jorenn92/maintainerr:latest@sha256:bee84707edaf589cda3d18b6813cbfe3a137b52786210c3a28190e10910c1240
+    image: ghcr.io/jorenn92/maintainerr:2.19.0@sha256:bee84707edaf589cda3d18b6813cbfe3a137b52786210c3a28190e10910c1240
     container_name: maintainerr
     hostname: maintainerr
     user: 150:65536
@@ -521,7 +521,7 @@ services:
 
   # IPTV stream proxy and EPG management
   dispatcharr:
-    image: ghcr.io/dispatcharr/dispatcharr:latest@sha256:b7d695c5cc98b9abd64c74a94539c1ebffc23d965021613c820c67e25dea41a3
+    image: ghcr.io/dispatcharr/dispatcharr:0.32.0@sha256:b7d695c5cc98b9abd64c74a94539c1ebffc23d965021613c820c67e25dea41a3
     container_name: dispatcharr
     restart: unless-stopped
     network_mode: service:gluetun

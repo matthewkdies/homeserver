@@ -39,6 +39,17 @@ module.exports = {
       matchPackageNames: ['mysql'],
       allowedVersions: '<9.0.0',
     },
+    {
+      description: 'Custom versioning for LinuxServer.io containers',
+      matchDatasources: ['docker'],
+      matchPackageNames: [
+        '/^linuxserver\\/.+/',
+        '/^lscr\\.io\\/linuxserver\\/.+/',
+        '/^ghcr\\.io\\/linuxserver\\/.+/',
+      ],
+      versioning:
+        'regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:[._-](?<build>[a-zA-Z0-9._-]+))?-ls(?<revision>\\d+)$',
+    },
   ],
   persistRepoData: true,
   cacheDir: '/tmp/renovate/cache',

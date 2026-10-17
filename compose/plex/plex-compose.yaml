@@ -15,7 +15,7 @@ secrets:
 
 services:
   plex:
-    image: linuxserver/plex:latest@sha256:06e07af2851e6a822e89062b148435495dd794d6d5aaf36247dee05fb3dcc4b8
+    image: linuxserver/plex:1.43.4.10903-e5521bd8c-ls327@sha256:06e07af2851e6a822e89062b148435495dd794d6d5aaf36247dee05fb3dcc4b8
     container_name: plex
     network_mode: host
     deploy: # need to use the GPU for hardware transcoding

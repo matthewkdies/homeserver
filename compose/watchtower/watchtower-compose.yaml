@@ -31,7 +31,7 @@ services:
       - "com.centurylinklabs.watchtower.monitor-only=true"
 
   watchtower:
-    image: nickfedor/watchtower:latest@sha256:3175c006eb20112f3a70f7002f82dbf4a4078c97e7033735a4d153668fc3dfb1
+    image: nickfedor/watchtower:1.23.1@sha256:3175c006eb20112f3a70f7002f82dbf4a4078c97e7033735a4d153668fc3dfb1
     container_name: watchtower
     depends_on:
       - watchtower-socket-proxy
