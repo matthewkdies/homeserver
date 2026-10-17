@@ -8,20 +8,27 @@ stop)
 	"${SCRIPT_DIR}/stop_sunshine.sh"
 	;;
 status)
-	if pgrep -x sunshine >/dev/null; then
-		echo "✅ Sunshine is running (PID: $(pgrep -x sunshine))."
+	if systemctl --user is-active --quiet sunshine.service; then
+		echo "✅ Sunshine service is running (systemd --user: active)."
+	elif pgrep -x sunshine >/dev/null; then
+		echo "✅ Sunshine process is running (PID: $(pgrep -x sunshine))."
 	else
 		echo "❌ Sunshine is not running."
 	fi
-	if pgrep -x openbox >/dev/null; then
-		echo "✅ Openbox window manager is running (PID: $(pgrep -x openbox))."
+	if systemctl is-active --quiet lightdm.service 2>/dev/null; then
+		echo "✅ LightDM display manager is active."
 	else
-		echo "❌ Openbox is not running."
+		echo "❌ LightDM display manager is not active."
 	fi
 	if pgrep -x Xorg >/dev/null; then
 		echo "✅ Xorg server is running (PID: $(pgrep -x Xorg))."
 	else
 		echo "❌ Xorg server is not running."
+	fi
+	if pgrep -x xfwm4 >/dev/null; then
+		echo "✅ Xfce desktop is active (WM PID: $(pgrep -x xfwm4))."
+	else
+		echo "❌ Xfce window manager is not running."
 	fi
 	if pgrep -x steam >/dev/null; then
 		echo "✅ Steam is running (PID: $(pgrep -x steam | head -n 1))."
@@ -35,19 +42,22 @@ status)
 start | "")
 	"${SCRIPT_DIR}/start_sunshine.sh" "$2"
 	;;
-steam)
-	"${SCRIPT_DIR}/start_steam.sh"
-	;;
 restart)
 	"${SCRIPT_DIR}/stop_sunshine.sh"
 	sleep 1
 	"${SCRIPT_DIR}/start_sunshine.sh" "$2"
 	;;
+steam)
+	"${SCRIPT_DIR}/start_steam.sh"
+	;;
 update)
 	"${SCRIPT_DIR}/update_sunshine.sh"
 	;;
+setup)
+	sudo "${SCRIPT_DIR}/sunshine-setup.sh"
+	;;
 *)
-	echo "Usage: $0 {start [--steam]|stop|restart [--steam]|status|steam|update}"
+	echo "Usage: $0 {start [--steam]|stop|restart [--steam]|status|steam|update|setup}"
 	exit 1
 	;;
 esac
