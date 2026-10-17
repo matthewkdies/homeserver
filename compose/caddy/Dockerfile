@@ -2,9 +2,7 @@
 # For more information, see "Adding custom Caddy modules" on the below:
 # https://hub.docker.com/_/caddy
 
-ARG CADDY_VERSION=2
-
-FROM caddy:${CADDY_VERSION}-builder-alpine AS builder
+FROM caddy:2-builder-alpine AS builder
 
 RUN <<EOF
 xcaddy build \
@@ -16,8 +14,6 @@ EOF
 
 # -----------------
 
-ARG CADDY_VERSION=2
-
-FROM caddy:${CADDY_VERSION}-alpine
+FROM caddy:2-alpine
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
