@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 export DISPLAY=:0
 
 # Ensure X server is running on :0
@@ -19,6 +21,9 @@ fi
 # Check if Sunshine is already running
 if pgrep -x "sunshine" >/dev/null; then
 	echo "Sunshine is already running."
+	if [ "$1" = "--steam" ] || [ "$1" = "-s" ]; then
+		"${SCRIPT_DIR}/start_steam.sh"
+	fi
 	exit 0
 fi
 
@@ -37,4 +42,8 @@ if pgrep -x "sunshine" >/dev/null; then
 else
 	echo "ERROR: Sunshine failed to start. Check logs at ${LOGFILE_PATH}."
 	exit 1
+fi
+
+if [ "$1" = "--steam" ] || [ "$1" = "-s" ]; then
+	"${SCRIPT_DIR}/start_steam.sh"
 fi

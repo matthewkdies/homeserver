@@ -11,7 +11,7 @@ else
 fi
 
 # Stop Steam if running
-if pgrep -f "com.valvesoftware.Steam" >/dev/null || pgrep -x "steam" >/dev/null; then
+if pgrep -x "steam" >/dev/null || flatpak ps --columns=application 2>/dev/null | grep -qx "com.valvesoftware.Steam"; then
 	echo "Stopping Steam..."
 	flatpak kill com.valvesoftware.Steam 2>/dev/null || true
 	pkill -x steam 2>/dev/null || true
