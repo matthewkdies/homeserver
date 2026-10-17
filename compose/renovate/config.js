@@ -33,6 +33,12 @@ module.exports = {
         'regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d+)(?:-(?<compatibility>.+))?$',
       separateMajorMinor: false,
     },
+    {
+      description: 'Keep MySQL on LTS release track',
+      matchDatasources: ['docker'],
+      matchPackageNames: ['mysql'],
+      allowedVersions: '<9.0.0',
+    },
   ],
   persistRepoData: true,
   cacheDir: '/tmp/renovate/cache',

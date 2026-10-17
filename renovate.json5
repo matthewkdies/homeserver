@@ -27,6 +27,12 @@
       "separateMajorMinor": false
     },
     {
+      "description": "Keep MySQL on LTS release track",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mysql"],
+      "allowedVersions": "<9.0.0"
+    },
+    {
       "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
       "automerge": true,
       "automergeType": "pr",
