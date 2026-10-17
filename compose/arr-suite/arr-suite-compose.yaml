@@ -432,7 +432,7 @@ services:
 
   # links lidarr to soulseek, starting downloads and running manual imports
   soularr:
-    image: mrusse08/soularr:latest@sha256:89b6809a169f6c78032c9a66abf5130e4877c46c0b95391818a38ab66cd71548
+    image: mrusse08/soularr:v1.2.2@sha256:c4f97924fabfce4e0de539d821ea7d20519b95c4815a707bacfc9d7212597f20
     container_name: soularr
     hostname: soularr
     expose:
