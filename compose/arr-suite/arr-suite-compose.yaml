@@ -335,6 +335,7 @@ services:
       # since gluetun acts as a network, everything that runs on it needs exposed here
       # so in order to expose apps on the VPN to the internet, we need to expose ports here
       - 8090 # qbittorrent
+      - 9191 # dispatcharr
     ports:
       - 8888:8888/tcp # HTTP proxy (tunnels HTTP and HTTPS through TCP)
       - 8388:8388/tcp # Shadowsocks proxy server (protocol based on SOCKS5 with an encryption layer, tunnels TCP+UDP)
@@ -518,6 +519,28 @@ services:
       - tautulli
     restart: unless-stopped
 
+  # IPTV stream proxy and EPG management
+  dispatcharr:
+    image: ghcr.io/dispatcharr/dispatcharr:latest
+    container_name: dispatcharr
+    restart: unless-stopped
+    network_mode: service:gluetun
+    depends_on:
+      gluetun:
+        condition: service_healthy
+    environment:
+      - TZ=America/New_York
+      - DISPATCHARR_ENV=aio
+      - REDIS_HOST=localhost
+      - CELERY_BROKER_URL=redis://localhost:6379/0
+      - DISPATCHARR_LOG_LEVEL=info
+      - DISPATCHARR_PORT=9191
+      - DISPATCHARR_TRUSTED_PROXIES=172.19.0.0/16
+    volumes:
+      - dispatcharr_data:/data
+    security_opt:
+      - no-new-privileges:true
+
     # # generates summaries, like a certain music streaming service every year
   # wrapperr:
   #   image: ghcr.io/aunefyren/wrapperr:latest
@@ -555,6 +578,7 @@ volumes:
   tautulli_config:
   meloday_config:
   maintainerr_config:
+  dispatcharr_data:
 
 networks:
   webapps:

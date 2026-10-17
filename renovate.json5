@@ -1,0 +1,48 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "docker:pinDigests"
+  ],
+  "dependencyDashboard": true,
+  "timezone": "America/New_York",
+  "pinDigests": true,
+  "minimumReleaseAge": "3 days",
+  "docker-compose": {
+    "managerFilePatterns": [
+      "/(^|/)[^/]+-compose\\.ya?ml$/",
+      "/(^|/)(?:docker-)?compose[^/]*\\.ya?ml$/"
+    ]
+  },
+  "packageRules": [
+    {
+      "description": "Calendar Versioning for Pi-hole and Home Assistant",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "pihole/pihole",
+        "homeassistant/home-assistant",
+        "ghcr.io/home-assistant/home-assistant"
+      ],
+      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d+)(?:-(?<compatibility>.+))?$",
+      "separateMajorMinor": false
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true,
+      "ignoreTests": true,
+      "labels": ["dependencies", "automerge"]
+    },
+    {
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "commitMessagePrefix": "chore(deps)!: ",
+      "labels": ["dependencies", "major-update", "needs-review"],
+      "prBodyNotes": [
+        "⚠️ **Major version upgrade**: Please review upstream breaking changes and migration guides before merging."
+      ]
+    }
+  ],
+  "prConcurrentLimit": 20
+}

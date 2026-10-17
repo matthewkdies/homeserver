@@ -137,11 +137,20 @@ llm.mattdies.com {
 	import log_for_app "llm"
 	reverse_proxy open-webui:8080
 }
+
 homeassistant.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "homeassistant"
 	import local_network_only
-	reverse_proxy 10.144.88.102:8123
+	reverse_proxy homeassistant:8123
+}
+
+zwave.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import log_for_app "zwave"
+	import local_network_only
+	reverse_proxy zwave-js-ui:8091
 }
 
 sunshine.mattdies.com {
@@ -274,6 +283,31 @@ maintainerr.mattdies.com {
 	import local_network_only
 	import log_for_app "maintainerr"
 	reverse_proxy maintainerr:6246
+}
+
+dispatcharr.mattdies.com {
+	import cloudflare_dns
+	import log_for_app "dispatcharr"
+
+	@external {
+		not path /api/channels/logos/*
+		not remote_ip 10.144.88.0/24 172.19.0.0/16
+	}
+	respond @external 403 {
+		close
+	}
+
+	@authelia {
+		not path /output/*
+		not path /api/channels/logos/*
+		not path /hdhr/*
+	}
+	forward_auth @authelia authelia:9091 {
+		uri /api/authz/forward-auth
+		copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+	}
+
+	reverse_proxy gluetun:9191
 }
 
 # will bring this back near the end of every year

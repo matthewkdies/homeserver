@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026/10/15
+
+### Added
+
+- [Renovate](https://github.com/renovatebot/renovate) to handle updating images and creating PRs on my GitHub automatically.
+
+### Changed
+
+- Upgraded Authelia to 4.39.28.
+- Migrated Authelia database to Postgres.
+- Increased security of Authelia by using read-only filesystem and mounting a temp file system.
+- Switched from `PUID` and `PGID` environment variables to dedicated Authelia user on host.
+
+## [1.5.0] - 2026/10/14
+
+### Added
+
+- [zwave-js-ui](https://github.com/zwave-js/zwave-js-ui), a Z-Wave control panel enabling integration with Plex.
+
+### Fixed
+
+- Plex can now properly access the EPG information + logos from Dispatcharr.
+
+## [1.4.0] - 2026/10/13
+
+### Added
+
+- [Dispatcharr](https://github.com/dispatcharr/dispatcharr) for IPTV and stream management.
+
+### Changed
+
+- Pi-hole now routes all local requests targeting subdomains of my domain directly to Caddy, fixing the need to dynamically update my custom DNS entries.
+
 ## [1.3.0] - 2026/10/08
 
 ### Added

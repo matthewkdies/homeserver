@@ -21,40 +21,97 @@ secrets:
     file: ${SECRETS_DIR}/authelia_notifier_smtp_password
   authelia_identity_providers_oidc_hmac_secret:
     file: ${SECRETS_DIR}/authelia_identity_providers_oidc_hmac_secret
+  authelia_postgres_user:
+    file: ${SECRETS_DIR}/authelia_postgres_user
+  authelia_postgres_password:
+    file: ${SECRETS_DIR}/authelia_postgres_password
 
 services:
   authelia:
     container_name: authelia
-    image: authelia/authelia:4.39.20
+    image: authelia/authelia:4.39.28
+    user: "128:129"
     expose:
       - 9091
     volumes:
       - ${DOCKER_DIR}/authelia:/config
     environment:
       TZ: America/New_York
-      PUID: 128
-      PGID: 129
       AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_providers_oidc_hmac_secret
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/authelia_storage_encryption_key
       AUTHELIA_NOTIFIER_SMTP_USERNAME: ${GMAIL} # SMTP
       AUTHELIA_NOTIFIER_SMTP_PASSWORD_FILE: /run/secrets/authelia_notifier_smtp_password # SMTP
+      AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/authelia_postgres_password
     secrets:
       - authelia_jwt_secret
       - authelia_storage_encryption_key
       - authelia_session_secret
       - authelia_notifier_smtp_password
       - authelia_identity_providers_oidc_hmac_secret
+      - authelia_postgres_user
+      - authelia_postgres_password
+    depends_on:
+      authelia-postgres-db:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --quiet --tries=1 --spider http://localhost:9091/api/health || exit 1",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     networks:
       webapps:
         ipv4_address: 172.19.0.2 # give it a static IP so we can create set vars elsewhere
+      authelia_network:
     restart: unless-stopped
 
-# TODO: set up Postgres database instead of SQLite
+  authelia-postgres-db:
+    image: postgres:17
+    container_name: authelia-postgres
+    hostname: authelia-postgres
+    mem_limit: 1g
+    cpu_shares: 768
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$(cat /run/secrets/authelia_postgres_user) -d authelia",
+        ]
+      timeout: 5s
+      interval: 10s
+      retries: 5
+    volumes:
+      - authelia_postgres:/var/lib/postgresql/data:rw
+    secrets:
+      - authelia_postgres_user
+      - authelia_postgres_password
+    environment:
+      POSTGRES_DB: authelia
+      POSTGRES_USER_FILE: /run/secrets/authelia_postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/authelia_postgres_password
+    networks:
+      - authelia_network
+    restart: unless-stopped
+
+volumes:
+  authelia_postgres:
 
 networks:
   webapps:
     external: true
+  authelia_network:

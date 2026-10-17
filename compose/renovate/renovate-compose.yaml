@@ -1,0 +1,25 @@
+# --------------------------------------------------------------------------
+# Renovate Self-Hosted Runner
+# Scans Docker Compose files, monitors container image releases, and opens
+# pull requests with digest pinning and automated safety guardrails.
+# --------------------------------------------------------------------------
+
+secrets:
+  renovate_github_token:
+    file: ${SECRETS_DIR}/renovate_github_token
+
+services:
+  renovate:
+    image: renovate/renovate:latest
+    user: "12021:144"
+    volumes:
+      - ${COMPOSE_DIR}/renovate/config.js:/usr/src/app/config.js:ro
+      - ${DOCKER_DIR}/renovate/cache:/tmp/renovate/cache
+    secrets:
+      - source: renovate_github_token
+        mode: 0444
+    environment:
+      RENOVATE_CONFIG_FILE: /usr/src/app/config.js
+      RENOVATE_TOKEN_FILE: /run/secrets/renovate_github_token
+      LOG_LEVEL: info
+    restart: "no"
