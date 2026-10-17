@@ -16,7 +16,7 @@ secrets:
 
 services:
   kcal:
-    image: kcalapp/kcal
+    image: kcalapp/kcal@sha256:c31311d5db659029ca16ecdfcb2faea0292b932535e576991d0c33c2c47a7892
     container_name: kcal
     command: [ "/docker-entrypoint.sh", "php-fpm" ]  # run custom command, still execute original one
     tty: true
@@ -69,7 +69,7 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:alpine
+    image: nginx:alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d
     container_name: kcal-nginx
     tty: true
     working_dir: /app
@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
 
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
     container_name: kcal-mysql
     tty: true
     expose:
@@ -107,7 +107,7 @@ services:
     restart: unless-stopped
 
   elasticsearch:
-    image: elasticsearch:7.12.0
+    image: elasticsearch:7.12.0@sha256:383e9fb572f3ca2fdef5ba2edb0dae2c467736af96aba2c193722aa0c08ca7ec
     container_name: kcal-elasticsearch
     environment:
       # - xpack.security.enabled=false
@@ -127,7 +127,7 @@ services:
       - 9200
 
   redis:
-    image: redis:alpine
+    image: redis:alpine@sha256:3811787313eba226a2ef38658c6ccb91cd5e110edc89c37767de373120a0e5a0
     container_name: kcal-redis
     expose:
       - 6379
