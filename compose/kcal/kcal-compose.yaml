@@ -87,7 +87,7 @@ services:
     restart: unless-stopped
 
   mysql:
-    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
+    image: mysql:8.4@sha256:24989179f58856db763f418010c1169fecc944e3ec1ea7e921572d83eb070f70
     container_name: kcal-mysql
     tty: true
     expose:
