@@ -33,14 +33,15 @@
       "allowedVersions": "<9.0.0"
     },
     {
+      "description": "Auto-merge safe non-major updates (patch/minor/digest) for stable, non-database packages",
       "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true,
-      "ignoreTests": true,
       "labels": ["dependencies", "automerge"]
     },
     {
+      "description": "Never auto-merge major version upgrades",
       "matchUpdateTypes": ["major"],
       "automerge": false,
       "commitMessagePrefix": "chore(deps)!: ",
@@ -48,6 +49,43 @@
       "prBodyNotes": [
         "⚠️ **Major version upgrade**: Please review upstream breaking changes and migration guides before merging."
       ]
+    },
+    {
+      "description": "Never auto-merge pre-1.0.0 (0.x) packages where minor or patch bumps can contain breaking changes",
+      "matchCurrentVersion": "/^0\\./",
+      "automerge": false,
+      "labels": ["dependencies", "needs-review"]
+    },
+    {
+      "description": "Never auto-merge Home Assistant because monthly releases contain breaking changes",
+      "matchPackageNames": [
+        "homeassistant/home-assistant",
+        "ghcr.io/home-assistant/home-assistant"
+      ],
+      "automerge": false,
+      "labels": ["dependencies", "needs-review"]
+    },
+    {
+      "description": "Never auto-merge database engines to prevent unexpected migrations or data breakage",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": [
+        "postgres",
+        "**/postgres",
+        "mysql",
+        "mariadb",
+        "redis",
+        "valkey/valkey",
+        "docker.io/valkey/valkey"
+      ],
+      "automerge": false,
+      "labels": ["dependencies", "database", "needs-review"]
+    },
+    {
+      "description": "Never auto-merge images tracking 'latest', where upstream major releases arrive as digest updates",
+      "matchDatasources": ["docker"],
+      "matchCurrentValue": "latest",
+      "automerge": false,
+      "labels": ["dependencies", "needs-review"]
     }
   ],
   "prConcurrentLimit": 20
