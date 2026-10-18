@@ -7,8 +7,6 @@
   "dependencyDashboard": true,
   "timezone": "America/New_York",
   "pinDigests": true,
-  "minimumReleaseAge": "3 days",
-  "dockerMaxPages": 1000,
   "docker-compose": {
     "managerFilePatterns": [
       "/(^|/)[^/]+-compose\\.ya?ml$/",
@@ -42,6 +40,21 @@
         "/^ghcr\\.io\\/linuxserver\\/.+/"
       ],
       "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:[._-](?<build>[a-zA-Z0-9._-]+))?-ls(?<revision>\\d+)$"
+    },
+    {
+      "description": "24-hour stability window for minor feature updates",
+      "matchUpdateTypes": ["minor"],
+      "minimumReleaseAge": "24 hours"
+    },
+    {
+      "description": "3-day stability window for major version upgrades",
+      "matchUpdateTypes": ["major"],
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Immediate release for patch, digest, and pin updates",
+      "matchUpdateTypes": ["patch", "pin", "digest", "pinDigest"],
+      "minimumReleaseAge": null
     },
     {
       "description": "Auto-merge safe non-major updates (patch/minor/digest) for stable, non-database packages",
