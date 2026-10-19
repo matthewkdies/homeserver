@@ -3,6 +3,7 @@ fail2ban
 **/congrats.md
 data
 .env
+__pycache__
 
 # ah, VSCode
 .vscode/settings.json
