@@ -39,6 +39,8 @@ args = [
     "arr-suite/bazarr-subcleaner",
     "--exclude-files",
     "football-pool/migrations",
+    "--exclude-files",
+    ".github/workflows/ci.yaml",
 ]
 
 # ==============================================================================

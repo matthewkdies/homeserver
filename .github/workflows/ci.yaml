@@ -1,0 +1,92 @@
+name: CI Validation
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-compose:
+    name: Validate Docker Compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Compose validation environment
+        run: |
+          DUMMY_DIR=$(mktemp -d)
+          mkdir -p "${DUMMY_DIR}/secrets"
+
+          # Dynamically populate dummy secrets referenced across all compose files
+          python3 -c '
+          import glob, re, os
+          compose_files = glob.glob("compose/*/*compose*.y*ml")
+          secrets = set()
+          for cf in compose_files:
+              with open(cf) as f:
+                  secrets.update(re.findall(r"\$\{SECRETS_DIR\}/([a-zA-Z0-9_\-\.]+)", f.read()))
+          for s in secrets:
+              with open(os.path.join("'"${DUMMY_DIR}/secrets"'", s), "w") as sf:
+                  sf.write("dummy-secret-value")
+          print(f"Dynamically generated {len(secrets)} mock secrets for validation.")
+          '
+
+          {
+            echo "DUMMY_DIR=${DUMMY_DIR}"
+            echo "SECRETS_DIR=${DUMMY_DIR}/secrets"
+            echo "DOCUMENTS_DIR=${GITHUB_WORKSPACE}"
+            echo "COMPOSE_DIR=${GITHUB_WORKSPACE}/compose"
+            echo "SCRIPTS_DIR=${GITHUB_WORKSPACE}/scripts"
+            echo "DOCKER_DIR=${DUMMY_DIR}"
+            echo "DATA_DIR=${DUMMY_DIR}/data"
+            echo "DATA2_DIR=${DUMMY_DIR}/data2"
+            echo "DATA3_DIR=${DUMMY_DIR}/data3"
+            echo "PHOTOS_DIR=${DUMMY_DIR}/photos"
+            echo "GMAIL=test@example.com"
+            echo "BAZARR_API_KEY=dummy"
+            echo "LIDARR_API_KEY=dummy"
+            echo "PROWLARR_API_KEY=dummy"
+            echo "RADARR_API_KEY=dummy"
+            echo "RADARR_4K_API_KEY=dummy"
+            echo "SONARR_API_KEY=dummy"
+            echo "QBITTORRENT_USERNAME=dummy"
+            echo "QBITTORRENT_PASSWORD=dummy"
+            echo "ZWAVE_SESSION_SECRET=dummy"
+            echo "POSTGRES_USER=dummy"
+            echo "POSTGRES_PASSWORD=dummy"
+          } >> "$GITHUB_ENV"
+
+      - name: Validate Compose Stacks
+        run: |
+          EXIT_CODE=0
+          for cf in compose/*/*compose*.y*ml; do
+            [ -f "$cf" ] || continue
+            echo "Checking $cf..."
+            if ! docker compose -f "$cf" config -q; then
+              echo "::error file=$cf::Invalid Docker Compose configuration in $cf"
+              EXIT_CODE=1
+            else
+              echo "  OK"
+            fi
+          done
+          exit $EXIT_CODE
+
+  lint:
+    name: Lint Scripts & Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        run: |
+          find scripts/ -type f -name "*.sh" -exec shellcheck --severity=warning {} +
+
+      - name: Run Actionlint
+        run: |
+          bash <(curl https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+          ./actionlint
