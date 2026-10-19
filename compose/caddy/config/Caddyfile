@@ -152,6 +152,13 @@ dozzle.mattdies.com {
 	reverse_proxy dozzle:8080
 }
 
+paperless.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "paperless"
+	reverse_proxy paperless:8000
+}
 
 llm.mattdies.com {
 	import cloudflare_dns

@@ -1,0 +1,108 @@
+# ------------------------------------------------------------------------
+# Paperless-ngx is an open-source document management system that
+# transforms physical documents and PDFs into searchable, organized
+# archives using OCR (Optical Character Recognition).
+# ------------------------------------------------------------------------
+
+secrets:
+  paperless_postgres_user:
+    file: ${SECRETS_DIR}/paperless_postgres_user
+  paperless_postgres_password:
+    file: ${SECRETS_DIR}/paperless_postgres_password
+  paperless_secret_key:
+    file: ${SECRETS_DIR}/paperless_secret_key
+
+services:
+  paperless:
+    image: ghcr.io/paperless-ngx/paperless-ngx:2.14.7@sha256:2a6d9f6461ad7e8335f5b2123a173b9e6002fda209af8a66483b0c00629569ab
+    container_name: paperless
+    hostname: paperless
+    depends_on:
+      paperless-postgres:
+        condition: service_healthy
+      paperless-redis:
+        condition: service_started
+    expose:
+      - 8000
+    secrets:
+      - paperless_postgres_user
+      - paperless_postgres_password
+      - paperless_secret_key
+    environment:
+      USERMAP_UID: "156"
+      USERMAP_GID: "156"
+      TZ: America/New_York
+      PAPERLESS_REDIS: redis://paperless-redis:6379
+      PAPERLESS_DBENGINE: postgresql
+      PAPERLESS_DBHOST: paperless-postgres
+      PAPERLESS_DBNAME: paperless
+      PAPERLESS_DBUSER_FILE: /run/secrets/paperless_postgres_user
+      PAPERLESS_DBPASS_FILE: /run/secrets/paperless_postgres_password
+      PAPERLESS_SECRET_KEY_FILE: /run/secrets/paperless_secret_key
+      PAPERLESS_URL: https://paperless.mattdies.com
+      PAPERLESS_TIME_ZONE: America/New_York
+      PAPERLESS_OCR_LANGUAGE: eng
+      PAPERLESS_OCR_PARALLELISM: 2
+      PAPERLESS_ENABLE_HTTP_REMOTE_USER: "true"
+      PAPERLESS_HTTP_REMOTE_USER_HEADER_NAME: HTTP_REMOTE_USER
+    volumes:
+      - paperless_data:/usr/src/paperless/data
+      - paperless_media:/usr/src/paperless/media
+      - paperless_export:/usr/src/paperless/export
+      - ${DATA_DIR}/paperless/consume:/usr/src/paperless/consume
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.31
+      paperless_network:
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  paperless-redis:
+    image: valkey/valkey:9
+    container_name: paperless-redis
+    hostname: paperless-redis
+    volumes:
+      - paperless_redis:/data
+    networks:
+      - paperless_network
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  paperless-postgres:
+    image: postgres:17
+    container_name: paperless-postgres
+    hostname: paperless-postgres
+    volumes:
+      - paperless_postgres:/var/lib/postgresql/data
+    secrets:
+      - paperless_postgres_user
+      - paperless_postgres_password
+    environment:
+      POSTGRES_DB: paperless
+      POSTGRES_USER_FILE: /run/secrets/paperless_postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/paperless_postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$(cat /run/secrets/paperless_postgres_user) -d paperless"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - paperless_network
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  paperless_data:
+  paperless_media:
+  paperless_export:
+  paperless_redis:
+  paperless_postgres:
+
+networks:
+  webapps:
+    external: true
+  paperless_network:
+    driver: bridge

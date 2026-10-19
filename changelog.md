@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- [paperless-ngx](https://docs.paperless-ngx.com/) for transforming physical documents into a searchable online archive using OCR.
 - [dozzle](https://dozzle.dev/), a real-time Docker log viewer.
 - [recyclarr](https://recyclarr.dev/), to sync Sonarr, Radarr, and Lidarr with the TRaSH Guides.
 - New CI workflows for validating compose files and linting scripts + workflows.
