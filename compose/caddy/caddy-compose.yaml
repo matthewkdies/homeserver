@@ -43,6 +43,7 @@ services:
       - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh
       - caddy_data:/data
       - caddy_config:/config
+      - caddy_logs:/var/log/caddy
     secrets:
       - actual_password
       - cloudflare_api_token
@@ -56,6 +57,7 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  caddy_logs:
 
 networks:
   webapps:

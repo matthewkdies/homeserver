@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [recyclarr](https://recyclarr.dev/), to sync Sonarr, Radarr, and Lidarr with the TRaSH Guides.
 - New CI workflows for validating compose files and linting scripts + workflows.
 
+### Changed
+
+- Mounted a logs directory for Caddy, so that fail2ban can use them.
+
 ### Fixed
 
 - The healthcheck for `seerr` was fixed to use `|| exit 1` instead of `| exit 1`.
