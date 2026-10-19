@@ -9,6 +9,7 @@ A few of my scripts run as `cron` jobs. These include:
 
 - [`backup_volumes.sh`](./backup_volumes.sh): Backs up all Docker volumes to a mounted drive.
 - [`backup_system.sh`](./backup_system.sh): Backs up the machine itself to a mounted drive.
+- [`check_dispatcharr_expiration.py`](./check_dispatcharr_expiration.py): Monitors Dispatcharr M3U subscriptions and sends Ntfy alerts when expiring within 5 days.
 - [`fix_data_permissions.sh`](./fix_data_permissions.sh): Fixes the permissions on the directories in which I store content.
 - [`update_caddy.sh`](./update_caddy.sh): Updates my `caddy` image, since I build my own image and want it up to date.
 
