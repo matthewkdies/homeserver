@@ -24,7 +24,7 @@ secrets:
 
 services:
   ntfy:
-    image: binwiederhier/ntfy:v2
+    image: binwiederhier/ntfy:v2@sha256:59250e1d8be2ee2186c4560322f625faef22ace380331f05b63f8842dbd62602
     container_name: ntfy
     hostname: ntfy
     command: serve
@@ -59,7 +59,7 @@ services:
     init: true # needed, if healthcheck is used; prevents zombie processes
 
   ntfy-postgres-db:
-    image: postgres:17
+    image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
     container_name: ntfy-postgres
     hostname: ntfy-postgres
     security_opt:
