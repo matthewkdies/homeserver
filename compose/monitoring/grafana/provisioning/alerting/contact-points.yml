@@ -1,0 +1,10 @@
+apiVersion: 1
+contactPoints:
+  - orgId: 1
+    name: ntfy-alerts
+    receivers:
+      - uid: ntfy-webhook
+        type: webhook
+        settings:
+          url: http://ntfy:8255/alerts
+          httpMethod: POST

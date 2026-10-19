@@ -5,6 +5,7 @@
 ### GLOBAL OPTIONS
 ### --------------
 {
+	metrics
 	# debug  # uncomment to enable debug mode
 	servers {
 		# trusted_proxies docs: # https://caddyserver.com/docs/caddyfile/options#trusted-proxies
@@ -150,6 +151,18 @@ dozzle.mattdies.com {
 	import local_network_only
 	import log_for_app "dozzle"
 	reverse_proxy dozzle:8080
+}
+
+grafana.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "grafana"
+	reverse_proxy grafana:3000
+}
+
+:2019 {
+	metrics /metrics
 }
 
 paperless.mattdies.com {

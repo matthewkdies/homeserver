@@ -1,0 +1,150 @@
+# ---------------------------------------------------------------------------------
+# Unified Server Telemetry & Monitoring Stack
+# - Host & Storage (Node Exporter + smartctl Exporter)
+# - Container Telemetry (cAdvisor cgroups v2)
+# - NVIDIA GPU Telemetry (nvidia_gpu_exporter with host PID app attribution)
+# - Media / Plex Telemetry (tautulli-exporter)
+# - Time Series DB (Prometheus with 30-day retention)
+# - Observability & Alerting Hub (Grafana with Authelia Auth Proxy SSO & ntfy alerts)
+# ---------------------------------------------------------------------------------
+
+secrets:
+  tautulli_api_key:
+    file: ${SECRETS_DIR}/tautulli_api_key
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  webapps:
+    external: true
+
+services:
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    restart: unless-stopped
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(dev|proc|sys|var/lib/docker/.+|var/lib/containers/.+)($$|/)'
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro,rslave
+    networks:
+      - webapps
+    security_opt:
+      - no-new-privileges:true
+
+  smartctl-exporter:
+    image: prometheuscommunity/smartctl-exporter:v0.12.0
+    container_name: smartctl-exporter
+    restart: unless-stopped
+    privileged: true
+    user: root
+    devices:
+      - /dev/nvme0n1:/dev/nvme0n1
+      - /dev/nvme0:/dev/nvme0
+    networks:
+      - webapps
+
+  nvidia-gpu-exporter:
+    image: utkuozdemir/nvidia_gpu_exporter:1.15.1
+    container_name: nvidia-gpu-exporter
+    restart: unless-stopped
+    pid: host
+    environment:
+      QUERY_APPS_INFO: "true"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    networks:
+      - webapps
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.51.0
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg:/dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    command:
+      - '--docker_only=true'
+      - '--housekeeping_interval=15s'
+      - '--disable_metrics=percpu,sched,tcp,udp,disk,hugetlb'
+    networks:
+      - webapps
+
+  tautulli-exporter:
+    build:
+      context: ${DOCUMENTS_DIR}
+      dockerfile: ${COMPOSE_DIR}/monitoring/Dockerfile
+    image: tautulli-exporter:local
+    container_name: tautulli-exporter
+    restart: unless-stopped
+    environment:
+      TAUTULLI_URL: "http://tautulli:8181"
+    volumes:
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh:ro
+    secrets:
+      - tautulli_api_key
+    networks:
+      - webapps
+    security_opt:
+      - no-new-privileges:true
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - webapps
+    security_opt:
+      - no-new-privileges:true
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: grafana
+    restart: unless-stopped
+    environment:
+      GF_SERVER_ROOT_URL: "https://grafana.mattdies.com"
+      GF_AUTH_PROXY_ENABLED: "true"
+      GF_AUTH_PROXY_HEADER_NAME: "Remote-User"
+      GF_AUTH_PROXY_HEADER_PROPERTY: "username"
+      GF_AUTH_PROXY_AUTO_SIGN_UP: "true"
+      GF_AUTH_PROXY_WHITELIST: "172.19.0.0/16,172.19.0.3"
+      GF_AUTH_PROXY_HEADERS: "Email:Remote-Email,Name:Remote-Name"
+      GF_AUTH_PROXY_ENABLE_LOGIN_TOKEN: "false"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: "Admin"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    networks:
+      - webapps
+    depends_on:
+      - prometheus
