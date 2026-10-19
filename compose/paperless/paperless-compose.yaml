@@ -59,7 +59,7 @@ services:
     restart: unless-stopped
 
   paperless-redis:
-    image: valkey/valkey:9
+    image: valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
     container_name: paperless-redis
     hostname: paperless-redis
     volumes:
@@ -71,7 +71,7 @@ services:
     restart: unless-stopped
 
   paperless-postgres:
-    image: postgres:17
+    image: postgres:17@sha256:2d2b8998d31037bf721cfdf764d76ba74171b4fab3431b7f72c27c56ddbdf9e3
     container_name: paperless-postgres
     hostname: paperless-postgres
     volumes:

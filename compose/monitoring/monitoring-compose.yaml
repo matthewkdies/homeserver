@@ -22,7 +22,7 @@ networks:
 
 services:
   node-exporter:
-    image: prom/node-exporter:v1.8.2
+    image: prom/node-exporter:v1.8.2@sha256:4032c6d5bfd752342c3e631c2f1de93ba6b86c41db6b167b9a35372c139e7706
     container_name: node-exporter
     restart: unless-stopped
     command:
@@ -40,7 +40,7 @@ services:
       - no-new-privileges:true
 
   smartctl-exporter:
-    image: prometheuscommunity/smartctl-exporter:v0.12.0
+    image: prometheuscommunity/smartctl-exporter:v0.12.0@sha256:d49a659f037db4b0f5adbcabff7f4dc3a8fb691b176a671583362d66a1115c5d
     container_name: smartctl-exporter
     restart: unless-stopped
     privileged: true
@@ -52,7 +52,7 @@ services:
       - webapps
 
   nvidia-gpu-exporter:
-    image: utkuozdemir/nvidia_gpu_exporter:1.15.1
+    image: utkuozdemir/nvidia_gpu_exporter:1.15.1@sha256:7aee2d42836ad29d4adb2722b7cfdc806ec9cc8d45fd0b8971ebbad2d9f3d087
     container_name: nvidia-gpu-exporter
     restart: unless-stopped
     pid: host
@@ -69,7 +69,7 @@ services:
       - webapps
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.51.0
+    image: gcr.io/cadvisor/cadvisor:v0.51.0@sha256:771a65c7877817cd9bb4c2d9eecb9fd1ac56f370287617658c51a35061efa71a
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
@@ -108,7 +108,7 @@ services:
       - no-new-privileges:true
 
   prometheus:
-    image: prom/prometheus:v2.54.1
+    image: prom/prometheus:v2.54.1@sha256:f6639335d34a77d9d9db382b92eeb7fc00934be8eae81dbc03b31cfe90411a94
     container_name: prometheus
     restart: unless-stopped
     command:
@@ -125,7 +125,7 @@ services:
       - no-new-privileges:true
 
   grafana:
-    image: grafana/grafana:11.2.0
+    image: grafana/grafana:11.2.0@sha256:408afb9726de5122b00a2576763a8a57a3c86d5b0eff5305bc994ceb3eb96c3f
     container_name: grafana
     restart: unless-stopped
     environment:
