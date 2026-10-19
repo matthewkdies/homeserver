@@ -56,6 +56,50 @@ In order to run any of the files to start the included containers, I make the fo
 
 Beyond that, starting a stack is as simple as `docker compose --file <path_to_file> up --detach`.
 
+# Hosted Services
+
+<!-- SERVICES_TABLE_START -->
+| Service | Category | Description | Access Level | Compose Stack |
+| :--- | :--- | :--- | :--- | :--- |
+| **Ollama** | AI & Local LLM | Local LLM inference backend with NVIDIA GPU acceleration | `Internal Service` | [`llm`](./compose/llm/llm-compose.yaml) |
+| **Open-WebUI** | AI & Local LLM | Web chat interface and agent orchestration for local LLMs | `Local Network Only` | [`llm`](./compose/llm/llm-compose.yaml) |
+| **Authelia** | Core & Ingress | Single Sign-On (SSO) and Multi-Factor Authentication | `Local Network + MFA` | [`authelia`](./compose/authelia/authelia-compose.yaml) |
+| **Caddy** | Core & Ingress | Reverse proxy with automatic HTTPS and Cloudflare DNS | `Public (Edge)` | [`caddy`](./compose/caddy/caddy-compose.yaml) |
+| **Dozzle** | Core & Ingress | Real-time container log viewer and resource monitor | `Local Network + MFA` | [`dozzle`](./compose/dozzle/dozzle-compose.yaml) |
+| **Ntfy** | Core & Ingress | Self-hosted push notification service for alerts | `Local Network Only` | [`ntfy`](./compose/ntfy/ntfy-compose.yaml) |
+| **Pi-hole** | Core & Ingress | Network-wide ad and tracker blocking DNS sinkhole | `Local Network Only` | [`pihole`](./compose/pihole/pihole-nas-compose.yaml) |
+| **Renovate** | Core & Ingress | Automated container and dependency update bot | `Internal Job` | [`renovate`](./compose/renovate/renovate-compose.yaml) |
+| **Uptime Kuma** | Core & Ingress | Service uptime and health status monitoring | `Local Network + MFA` | [`uptime-kuma`](./compose/uptime-kuma/uptime-kuma-compose.yaml) |
+| **WireGuard** | Core & Ingress | Fast and secure VPN tunnel for remote access | `Public (VPN Port)` | [`wireguard`](./compose/wireguard/wireguard-compose.yaml) |
+| **Minecraft (Spigot)** | Gaming | Multiplayer Minecraft survival server | `Public (Game Port)` | [`minecraft`](./compose/minecraft/minecraft-compose.yaml) |
+| **Bazarr** | Media & Streaming | Automated subtitle downloader for Sonarr and Radarr | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Dispatcharr** | Media & Streaming | IPTV stream and EPG guide management proxy | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Gluetun** | Media & Streaming | Secure VPN client container routing download traffic | `Internal VPN Client` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Lidarr** | Media & Streaming | Music collection manager and download automator | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Maintainerr** | Media & Streaming | Rule-based automated media cleanup and library maintenance | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Meloday** | Media & Streaming | Automated smart playlist generator for Plex music | `Internal Service` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Plex** | Media & Streaming | Central media server for movies, TV, and music streaming | `Public / Local` | [`plex`](./compose/plex/plex-compose.yaml) |
+| **Prowlarr** | Media & Streaming | Torrent indexer and Usenet tracker aggregator | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Radarr** | Media & Streaming | Movie collection manager and download automator | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Radarr (4K)** | Media & Streaming | Dedicated 4K HDR movie collection manager | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Recyclarr** | Media & Streaming | Automated TRaSH Guides syncing for Sonarr and Radarr | `Internal Service` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Seerr** | Media & Streaming | Media request management and content discovery | `Public` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Slskd (Soulseek)** | Media & Streaming | Soulseek network client for music sharing | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Sonarr** | Media & Streaming | TV show collection manager and download automator | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Soularr** | Media & Streaming | Bridge linking Lidarr requests to Soulseek downloads | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Tautulli** | Media & Streaming | Plex monitoring, analytics, and watch history tracking | `Local Network Only` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Tdarr** | Media & Streaming | Distributed media transcoding and library optimization | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **qBittorrent** | Media & Streaming | BitTorrent client routed through Gluetun VPN | `Local Network + MFA` | [`arr-suite`](./compose/arr-suite/arr-suite-compose.yaml) |
+| **Actual Budget** | Productivity & Personal | Privacy-focused personal budgeting application | `Local Network Only` | [`actual`](./compose/actual/actual-compose.yaml) |
+| **Football Pool** | Productivity & Personal | Custom sports prediction and league pool web app | `Public` | [`football-pool`](./compose/football-pool/football-pool-compose.yaml) |
+| **Immich** | Productivity & Personal | Self-hosted photo and video backup with AI search | `Local Network Only` | [`immich`](./compose/immich/immich-compose.yaml) |
+| **LubeLogger** | Productivity & Personal | Vehicle service history, maintenance, and fuel tracker | `Local Network + MFA` | [`lubelogger`](./compose/lubelogger/lubelogger-compose.yaml) |
+| **Mealie** | Productivity & Personal | Recipe manager, meal planner, and grocery list organizer | `Public (Rate-limited)` | [`mealie`](./compose/mealie/mealie-compose.yaml) |
+| **Paperless-ngx** | Productivity & Personal | Document management and OCR archive system | `Local Network + MFA` | [`paperless`](./compose/paperless/paperless-compose.yaml) |
+| **Home Assistant** | Smart Home & IoT | Central home automation and smart device coordinator | `Local Network Only` | [`home-assistant`](./compose/home-assistant/home-assistant-compose.yaml) |
+| **Z-Wave JS UI** | Smart Home & IoT | Z-Wave device management panel and gateway | `Local Network + MFA` | [`home-assistant`](./compose/home-assistant/home-assistant-compose.yaml) |
+<!-- SERVICES_TABLE_END -->
+
 # Basic Structure
 
 - [`compose/`](./compose/): Contains the Docker Compose files, Dockerfiles, configuration files, healthscripts, and documentation related to the Docker containers on my home server.
