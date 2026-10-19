@@ -1,0 +1,71 @@
+# ----------------------------------------------------------------------------------------
+# Dozzle is a lightweight, real-time log viewer and container monitor.
+# It connects to the Docker daemon and streams container logs, CPU/memory usage, and
+# process stats directly to a browser interface.
+#
+# I pair mine with Docker Socket Proxy, which exposes the Docker socket through an API and
+# limits the types of requests that it can make, keeping access read-only and restricted
+# to container status, logs, and system information.
+# ----------------------------------------------------------------------------------------
+
+services:
+  dozzle:
+    image: amir20/dozzle:v11.3.2@sha256:0d8cf9702f422d65a7e8ad238785dc6b05b2b9c43c945f6bbdf3358ad5da5f6c
+    container_name: dozzle
+    hostname: dozzle
+    environment:
+      TZ: America/New_York
+      DOCKER_HOST: tcp://dozzle-socket-proxy:2375
+      DOZZLE_NO_ANALYTICS: "true"
+      DOZZLE_AUTH_PROVIDER: forward-proxy
+      DOZZLE_AUTH_HEADER_USER: Remote-User
+      DOZZLE_AUTH_HEADER_EMAIL: Remote-Email
+      DOZZLE_AUTH_HEADER_NAME: Remote-Name
+      DOZZLE_LEVEL: info
+    volumes:
+      - dozzle_data:/data
+    expose:
+      - 8080
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.30
+      dozzle_network:
+    healthcheck:
+      test: ["CMD", "/dozzle", "healthcheck"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    depends_on:
+      - dozzle-socket-proxy
+
+  dozzle-socket-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0@sha256:1f5038b54f06c3e18422902cf00ba21803d1c97805aae032e5e6673d532d3459
+    container_name: dozzle-socket-proxy
+    hostname: docker-socket-proxy
+    privileged: true
+    expose:
+      - 2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      LOG_LEVEL: info
+      CONTAINERS: 1 # required for Dozzle to list containers, stream logs, and read stats
+      INFO: 1       # required for Dozzle to read Docker system information
+    networks:
+      dozzle_network:
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  dozzle_data:
+
+networks:
+  webapps:
+    external: true
+  dozzle_network:
+    driver: bridge

@@ -144,6 +144,15 @@ status.mattdies.com {
 	reverse_proxy uptime_kuma:3001
 }
 
+dozzle.mattdies.com {
+	import use_authelia
+	import cloudflare_dns
+	import local_network_only
+	import log_for_app "dozzle"
+	reverse_proxy dozzle:8080
+}
+
+
 llm.mattdies.com {
 	import cloudflare_dns
 	import local_network_only
