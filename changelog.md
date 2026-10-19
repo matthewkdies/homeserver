@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - [recyclarr](https://recyclarr.dev/), to sync Sonarr, Radarr, and Lidarr with the TRaSH Guides.
 - New CI workflows for validating compose files and linting scripts + workflows.
+- A `security_headers` snippet in the Caddyfile which enforces stricter requirements for accessing webpages from outside the local network.
 
 ### Changed
 
