@@ -24,3 +24,5 @@ sunshine/*.log
 
 # local scratch / superpowers tooling
 .superpowers/
+.worktrees
+.worktrees/
