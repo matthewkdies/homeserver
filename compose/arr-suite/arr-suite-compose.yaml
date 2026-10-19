@@ -38,6 +38,12 @@ secrets:
     file: ${SECRETS_DIR}/gluetun_wireguard_private_key
   wireguard-addresses:
     file: ${SECRETS_DIR}/gluetun_wireguard_addresses
+  sonarr_api_key:
+    file: ${SECRETS_DIR}/sonarr_api_key
+  radarr_api_key:
+    file: ${SECRETS_DIR}/radarr_api_key
+  radarr_4k_api_key:
+    file: ${SECRETS_DIR}/radarr_4k_api_key
 
 services:
   # tv show monitoring + management
@@ -542,6 +548,34 @@ services:
       - ./dispatcharr/patches/views.py:/app/apps/proxy/live_proxy/views.py:ro
     security_opt:
       - no-new-privileges:true
+
+  # automatically syncs TRaSH Guides custom formats, release profiles, and quality definitions
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:8@sha256:b1fbb929ba718fdbdac2c1fc25b32b0ae916d7a5a0892c2068c9bfae6f1a9209
+    container_name: recyclarr
+    hostname: recyclarr
+    user: 155:65536
+    entrypoint: ["/sbin/tini", "--", "/bin/sh", "/scripts/set_secret_vars.sh", "/entrypoint.sh"]
+    environment:
+      TZ: America/New_York
+      CRON_SCHEDULE: "@daily"
+    volumes:
+      - ${DOCKER_DIR}/recyclarr:/config
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/scripts/set_secret_vars.sh:ro
+    secrets:
+      - sonarr_api_key
+      - radarr_api_key
+      - radarr_4k_api_key
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.32
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      - sonarr
+      - radarr
+      - radarr4k
+    restart: unless-stopped
 
     # # generates summaries, like a certain music streaming service every year
   # wrapperr:
