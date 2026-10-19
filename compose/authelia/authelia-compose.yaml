@@ -25,6 +25,8 @@ secrets:
     file: ${SECRETS_DIR}/authelia_postgres_user
   authelia_postgres_password:
     file: ${SECRETS_DIR}/authelia_postgres_password
+  authelia_oidc_private_key:
+    file: ${SECRETS_DIR}/authelia_oidc_private_key
 
 services:
   authelia:
@@ -37,6 +39,7 @@ services:
       - ${DOCKER_DIR}/authelia:/config
     environment:
       TZ: America/New_York
+      X_AUTHELIA_CONFIG_FILTERS: template
       AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/authelia_jwt_secret
       AUTHELIA_IDENTITY_PROVIDERS_OIDC_HMAC_SECRET_FILE: /run/secrets/authelia_identity_providers_oidc_hmac_secret
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/authelia_session_secret
@@ -52,6 +55,7 @@ services:
       - authelia_identity_providers_oidc_hmac_secret
       - authelia_postgres_user
       - authelia_postgres_password
+      - authelia_oidc_private_key
     depends_on:
       authelia-postgres-db:
         condition: service_healthy
