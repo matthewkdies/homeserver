@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [paperless-ngx](https://docs.paperless-ngx.com/) for transforming physical documents into a searchable online archive using OCR.
 - [dozzle](https://dozzle.dev/), a real-time Docker log viewer.
 - [recyclarr](https://recyclarr.dev/), to sync Sonarr, Radarr, and Lidarr with the TRaSH Guides.
+- [CrowdSec](https://www.crowdsec.net/), an intrusion prevention system for preemptive blocking of malicious IPs.
 - New CI workflows for validating compose files and linting scripts + workflows.
 - A `security_headers` snippet in the Caddyfile which enforces stricter requirements for accessing webpages from outside the local network.
 - A script used to check when a subscription in Dispatcharr will be expiring soon, and send a notification via Ntfy.

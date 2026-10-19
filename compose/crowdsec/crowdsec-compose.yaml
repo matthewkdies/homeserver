@@ -1,0 +1,40 @@
+# ------------------------------------------------------------------------
+# CrowdSec is a modern, collaborative intrusion prevention system.
+# It parses application logs (Caddy, SSH, etc.), detects attacks using
+# behavioral scenarios, and shares consensus threat intelligence globally.
+# ------------------------------------------------------------------------
+
+services:
+  crowdsec:
+    image: crowdsecurity/crowdsec:v1.6.4@sha256:091229068a9dab7f8c1ae41086669620da2980c6ccc26f9e358a75aaa7cb4a27
+    container_name: crowdsec
+    hostname: crowdsec
+    environment:
+      TZ: America/New_York
+      COLLECTIONS: "crowdsecurity/caddy LePresidente/authelia crowdsecurity/linux crowdsecurity/whitelist-good-actors"
+    volumes:
+      - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_config:/etc/crowdsec
+      - caddy_logs:/var/log/caddy:ro
+      - /var/log/auth.log:/var/log/auth.log:ro
+      - ${DOCKER_DIR}/authelia/authelia.log:/var/log/authelia/authelia.log:ro
+      - ${COMPOSE_DIR}/crowdsec/acquis.d:/etc/crowdsec/acquis.d:ro
+    expose:
+      - 8080
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.33
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+volumes:
+  crowdsec_data:
+  crowdsec_config:
+  caddy_logs:
+    external: true
+    name: caddy_caddy_logs
+
+networks:
+  webapps:
+    external: true
