@@ -538,6 +538,8 @@ services:
       - DISPATCHARR_TRUSTED_PROXIES=172.19.0.0/16
     volumes:
       - dispatcharr_data:/data
+      - ./dispatcharr/patches/generator.py:/app/apps/proxy/live_proxy/output/ts/generator.py:ro
+      - ./dispatcharr/patches/views.py:/app/apps/proxy/live_proxy/views.py:ro
     security_opt:
       - no-new-privileges:true
 

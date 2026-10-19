@@ -1,0 +1,1265 @@
+import json
+import time
+import random
+import pathlib
+from django.db import close_old_connections
+from django.http import (
+    StreamingHttpResponse,
+    JsonResponse,
+    HttpResponseRedirect,
+    HttpResponse,
+    Http404,
+)
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from .server import ProxyServer
+from .channel_status import ChannelStatus, build_live_channel_stats_data
+from .output.ts.generator import create_stream_generator
+from .output.fmp4.generator import create_fmp4_stream_generator
+from dispatcharr.utils import get_client_ip, network_access_allowed
+from .redis_keys import RedisKeys
+from apps.channels.models import Channel, Stream
+from apps.accounts.models import User
+from core.models import CoreSettings, PROXY_PROFILE_NAME, StreamProfile
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from apps.accounts.permissions import (
+    IsAdmin,
+)
+from .constants import ChannelState, ChannelMetadataField
+from .services.channel_service import ChannelService
+from core.utils import send_websocket_update
+from .url_utils import (
+    generate_stream_url,
+    get_stream_info_for_switch,
+    get_stream_object,
+    parse_preview_worker_id,
+    pick_channel_preview_target,
+    pick_stream_m3u_profile_id,
+    preview_worker_id,
+    release_worker_stream,
+)
+from .utils import get_logger
+import gevent
+from apps.proxy.utils import check_user_stream_limits
+
+logger = get_logger()
+
+
+def _is_skip_redirect_requested(request, user, client_id):
+    """True only for skip_redirect=true.
+
+    A Standard or Admin user hitting /proxy/ts/stream/ directly may opt a
+    Redirect-mode channel or stream into a profile-scoped stream preview
+    worker instead of a 302. false, empty, or any other value leaves Redirect
+    behavior unchanged. Ignored for XC requests and for Streamer-level users.
+    """
+    if request.GET.get("skip_redirect", "").lower() != "true":
+        return False
+    if not request.path.startswith("/proxy/ts/stream/"):
+        logger.warning(f"[{client_id}] skip_redirect requested on a non-direct route; ignoring")
+        return False
+    if not user or getattr(user, "user_level", 0) < User.UserLevel.STANDARD:
+        logger.warning(f"[{client_id}] skip_redirect requested by a disallowed user; ignoring")
+        return False
+    return True
+
+
+def _stream_limit_response(user):
+    return JsonResponse(
+        {"error": (f"Stream limit exceeded ({user.stream_limit} concurrent streams allowed)")},
+        status=429,
+    )
+
+
+def _resolve_proxy_profile_id(client_id):
+    """The locked Proxy StreamProfile's id, used so a skip_redirect preview
+    starts the same way a real Proxy channel starts (transcode=False).
+    """
+    try:
+        return StreamProfile.objects.get(name=PROXY_PROFILE_NAME, locked=True).id
+    except StreamProfile.DoesNotExist:
+        logger.error(f"[{client_id}] Proxy stream profile not found; cannot honor skip_redirect")
+        return None
+
+
+def _obtain_stream_with_retries(
+    channel_id,
+    client_id,
+    user,
+    allowed_m3u_profiles,
+    override_stream_profile_id=None,
+):
+    """Call generate_stream_url, retrying when the failure is connection limits.
+
+    Returns:
+        (stream_url, stream_user_agent, transcode, profile_value, slot_reserved,
+         error_reason, resolved_stream_id, attempt, wait_start_time)
+    """
+    retry_timeout = 8
+    retry_interval = 0.1
+    wait_start_time = time.time()
+
+    stream_url = None
+    stream_user_agent = None
+    transcode = False
+    profile_value = None
+    slot_reserved = False
+    error_reason = None
+    resolved_stream_id = None
+    attempt = 0
+    should_retry = True
+
+    while should_retry and time.time() - wait_start_time < retry_timeout:
+        attempt += 1
+        (
+            stream_url,
+            stream_user_agent,
+            transcode,
+            profile_value,
+            slot_reserved,
+            error_reason,
+            resolved_stream_id,
+        ) = generate_stream_url(
+            channel_id,
+            user,
+            allowed_m3u_profiles,
+            override_stream_profile_id=override_stream_profile_id,
+        )
+
+        if stream_url is not None:
+            logger.info(f"[{client_id}] Successfully obtained stream for channel {channel_id} after {attempt} attempts")
+            break
+
+        if attempt == 1:
+            if error_reason and "maximum connection limits" not in error_reason:
+                logger.warning(f"[{client_id}] Can't retry - error not related to connection limits: {error_reason}")
+                should_retry = False
+                break
+
+        elapsed_time = time.time() - wait_start_time
+        remaining_time = retry_timeout - elapsed_time
+        if remaining_time <= retry_interval:
+            logger.info(
+                f"[{client_id}] Insufficient time ({remaining_time:.1f}s) for "
+                f"another sleep cycle, will make one final attempt"
+            )
+            break
+
+        logger.info(
+            f"[{client_id}] Waiting {retry_interval * 1000:.0f}ms for a connection "
+            f"to become available (attempt {attempt}, {remaining_time:.1f}s remaining)"
+        )
+        gevent.sleep(retry_interval)
+        retry_interval += 0.025
+
+    if stream_url is None and should_retry and time.time() - wait_start_time < retry_timeout:
+        attempt += 1
+        logger.info(f"[{client_id}] Making final attempt {attempt} at timeout boundary")
+        (
+            stream_url,
+            stream_user_agent,
+            transcode,
+            profile_value,
+            slot_reserved,
+            error_reason,
+            resolved_stream_id,
+        ) = generate_stream_url(
+            channel_id,
+            user,
+            allowed_m3u_profiles,
+            override_stream_profile_id=override_stream_profile_id,
+        )
+        if stream_url is not None:
+            logger.info(f"[{client_id}] Successfully obtained stream on final attempt for channel {channel_id}")
+
+    return (
+        stream_url,
+        stream_user_agent,
+        transcode,
+        profile_value,
+        slot_reserved,
+        error_reason,
+        resolved_stream_id,
+        attempt,
+        wait_start_time,
+    )
+
+
+def _channel_stopping_response():
+    response = JsonResponse(
+        {"error": "Channel is stopping, retry shortly"},
+        status=503,
+    )
+    response["Retry-After"] = "1"
+    return response
+
+
+def _channel_setup_needed(proxy_server, channel_id):
+    """
+    Decide whether this worker still needs to run full channel setup.
+
+    Returns (needs_setup, state, wait_for_init).
+    """
+    state = None
+    if proxy_server.redis_client:
+        metadata = proxy_server.redis_client.hgetall(RedisKeys.channel_metadata(channel_id))
+        if metadata:
+            state = metadata.get(ChannelMetadataField.STATE)
+            if state in (
+                ChannelState.ACTIVE,
+                ChannelState.WAITING_FOR_CLIENTS,
+                ChannelState.BUFFERING,
+                ChannelState.INITIALIZING,
+                ChannelState.CONNECTING,
+            ):
+                wait_for_init = state in (
+                    ChannelState.INITIALIZING,
+                    ChannelState.CONNECTING,
+                )
+                return False, state, wait_for_init
+            if state == ChannelState.STOPPING:
+                return False, state, False
+            if state in (ChannelState.ERROR, ChannelState.STOPPED):
+                return True, state, False
+
+            # Unknown/empty state: trust a live owner worker, otherwise re-setup
+            owner = metadata.get(ChannelMetadataField.OWNER)
+            if owner:
+                owner_heartbeat_key = f"live:worker:{owner}:heartbeat"
+                if proxy_server.redis_client.exists(owner_heartbeat_key):
+                    return False, state, False
+                return True, state, False
+
+    if proxy_server.check_if_channel_exists(channel_id):
+        return False, state, False
+
+    return True, state, False
+
+
+def _drop_pre_registered_client(proxy_server, channel_id, client_id):
+    """Undo an early add_client() when setup aborts before streaming starts."""
+    mgr = proxy_server.client_managers.get(channel_id)
+    if mgr:
+        mgr.remove_client(client_id)
+        return
+    if not proxy_server.redis_client:
+        return
+    proxy_server.redis_client.srem(RedisKeys.clients(channel_id), client_id)
+    proxy_server.redis_client.delete(RedisKeys.client_metadata(channel_id, client_id))
+
+
+def _resolve_output_format(user, force=None, request=None):
+    """Return the output format string to use for this client."""
+    _FORMAT_ALIASES = {
+        "mpegts": "mpegts",
+        "ts": "mpegts",
+        "fmp4": "fmp4",
+        "mp4": "fmp4",
+    }
+    if force:
+        return force
+    if request:
+        # Support both ?output_format= (native) and ?output= (XC-style)
+        param = request.GET.get("output_format") or request.GET.get("output")
+        if param in _FORMAT_ALIASES:
+            return _FORMAT_ALIASES[param]
+    if user:
+        custom = getattr(user, "custom_properties", None) or {}
+        user_format = custom.get("output_format")
+        if user_format:
+            return user_format
+    return CoreSettings.get_default_output_format()
+
+
+def _resolve_output_profile(request, user):
+    from core.models import OutputProfile
+
+    param = request.GET.get("output_profile")
+    if param:
+        try:
+            return OutputProfile.objects.get(id=int(param), is_active=True)
+        except (OutputProfile.DoesNotExist, ValueError, TypeError):
+            return None
+    if user:
+        custom = getattr(user, "custom_properties", None) or {}
+        profile_id = custom.get("output_profile")
+        if profile_id:
+            try:
+                return OutputProfile.objects.get(id=int(profile_id), is_active=True)
+            except (OutputProfile.DoesNotExist, ValueError, TypeError):
+                return None
+    return None
+
+
+def _handle_redirect_stream(channel, channel_id, client_id, user, allowed_m3u_profiles):
+    """Resolve a Redirect-mode channel to a provider URL and hand the client a
+    redirect. Runs whenever the channel's saved profile is Redirect and the
+    request did not opt out via skip_redirect, independent of whether a channel
+    worker is already running (e.g. from a concurrent override), so a normal
+    viewer is never attached to that worker's buffer.
+    """
+    from apps.proxy.config import TSConfig
+
+    (
+        stream_url,
+        stream_user_agent,
+        _transcode,
+        _profile_value,
+        slot_reserved,
+        error_reason,
+        resolved_stream_id,
+        attempt,
+        wait_start_time,
+    ) = _obtain_stream_with_retries(channel_id, client_id, user, allowed_m3u_profiles)
+
+    if stream_url is None:
+        if slot_reserved and not channel.release_stream():
+            logger.debug(f"[{client_id}] release_stream found no keys during failed init cleanup")
+        wait_duration = f"{int(time.time() - wait_start_time)}s"
+        error_msg = error_reason if error_reason else "No available streams for this channel"
+        logger.info(f"[{client_id}] Failed to obtain stream after {attempt} attempts over {wait_duration}: {error_msg}")
+        return JsonResponse({"error": error_msg, "waited": wait_duration}, status=503)
+
+    def _redirect_response(url):
+        if url.startswith(("rtsp://", "rtp://", "udp://")):
+            logger.info(f"[{client_id}] Using manual redirect for non-HTTP protocol")
+            response = HttpResponse(status=301)
+            response["Location"] = url
+            return response
+        return HttpResponseRedirect(url)
+
+    # The reserved slot is released once the decision is made (before the client
+    # follows the redirect), including when validation or alternate lookup raises.
+    try:
+        # Optional pre-check (Settings → Proxy → Validate Redirect URLs). Some
+        # providers abort HEAD/GET probes and waste a connection slot; disabling
+        # skips failover probing and redirects immediately.
+        if not TSConfig.get_validate_redirect_urls():
+            logger.info(f"[{client_id}] Redirect URL validation disabled; handing off to {stream_url}")
+            return _redirect_response(stream_url)
+
+        from .url_utils import validate_stream_url, get_alternate_streams
+
+        logger.info(f"[{client_id}] Validating redirect URL: {stream_url}")
+        is_valid, final_url, status_code, message = validate_stream_url(
+            stream_url, user_agent=stream_user_agent, timeout=(5, 5)
+        )
+
+        if not is_valid:
+            logger.warning(f"[{client_id}] Primary stream URL failed validation: {message}")
+
+            # Track tried streams to avoid loops. Use the stream actually chosen
+            # for this request (not Redis channel_stream), since Redirect
+            # allowlist selection does not write a shared assignment.
+            tried_streams = {resolved_stream_id}
+
+            alternates = get_alternate_streams(channel_id, resolved_stream_id, allowed_m3u_profiles)
+
+            for alt in alternates:
+                if alt["stream_id"] in tried_streams:
+                    continue
+                tried_streams.add(alt["stream_id"])
+
+                alt_info = get_stream_info_for_switch(channel_id, alt["stream_id"], alt["profile_id"])
+                if "error" in alt_info:
+                    logger.warning(f"[{client_id}] Error getting alternate stream info: {alt_info['error']}")
+                    continue
+
+                logger.info(f"[{client_id}] Trying alternate stream #{alt['stream_id']}: {alt_info['url']}")
+                is_valid, final_url, status_code, message = validate_stream_url(
+                    alt_info["url"], user_agent=alt_info["user_agent"], timeout=(5, 5)
+                )
+
+                if is_valid:
+                    logger.info(f"[{client_id}] Alternate stream #{alt['stream_id']} validated successfully")
+                    break
+                logger.warning(f"[{client_id}] Alternate stream #{alt['stream_id']} failed validation: {message}")
+
+        if is_valid:
+            logger.info(f"[{client_id}] Redirecting to validated URL: {final_url} ({message})")
+            return _redirect_response(final_url)
+        logger.error(f"[{client_id}] All available redirect URLs failed validation")
+        return JsonResponse({"error": "All available streams failed validation"}, status=502)
+    finally:
+        if slot_reserved and not channel.release_stream():
+            logger.warning(f"[{client_id}] Failed to release stream before redirect")
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def stream_ts(request, channel_id, user=None, force_output_format=None):
+    if not network_access_allowed(request, "STREAMS"):
+        return JsonResponse({"error": "Forbidden"}, status=403)
+
+    """Stream TS data to client with immediate response and keep-alive packets during initialization"""
+    if user is None and hasattr(request, "user") and request.user.is_authenticated:
+        user = request.user
+
+    client_user_agent = None
+    proxy_server = ProxyServer.get_instance()
+    connection_allocated = False  # Track if connection slot was allocated via get_stream()
+    # Initialized before the try so the exception handler can always safely
+    # check/clean it up, regardless of where in the setup a failure occurs.
+    _client_pre_registered = False
+    channel = None
+    client_id = None
+    channel_display_name = None
+
+    try:
+        # Profile-scoped preview worker ids are minted server-side only.
+        if parse_preview_worker_id(channel_id)[1] is not None:
+            return JsonResponse({"error": "Not found"}, status=404)
+
+        channel = get_stream_object(channel_id)
+        channel_display_name = getattr(channel, "name", None)
+
+        # Generate a unique client ID
+        client_id = f"client_{int(time.time() * 1000)}_{random.randint(1000, 9999)}"
+
+        stream_profile = channel.get_stream_profile()
+        skip_redirect_requested = _is_skip_redirect_requested(request, user, client_id)
+        override_stream_profile_id = None
+
+        allowed_m3u_profiles = None
+        if user and (stream_profile.is_redirect() or skip_redirect_requested):
+            from apps.m3u.utils import get_allowed_m3u_profiles
+
+            allowed_m3u_profiles = get_allowed_m3u_profiles(user)
+
+        client_ip = get_client_ip(request)
+        logger.info(f"[{client_id}] Requested stream for channel {channel_id}")
+
+        # Extract client user agent early
+        for header in ["HTTP_USER_AGENT", "User-Agent", "user-agent"]:
+            if header in request.META:
+                client_user_agent = request.META[header]
+                logger.debug(f"[{client_id}] Client connected with user agent: {client_user_agent}")
+                break
+
+        # Redirect-vs-preview decision before any running-worker check so a
+        # normal Redirect viewer never attaches to a skip_redirect preview.
+        # Stream limits use the id that will actually be registered: the channel
+        # UUID for a plain redirect, the profile-scoped worker id after remap.
+        if isinstance(channel, Channel) and stream_profile.is_redirect():
+            if not skip_redirect_requested:
+                if user and not check_user_stream_limits(user, client_id, media_id=channel_id):
+                    return _stream_limit_response(user)
+                if ChannelService.is_channel_unavailable_for_new_clients(channel_id):
+                    return _channel_stopping_response()
+                return _handle_redirect_stream(channel, channel_id, client_id, user, allowed_m3u_profiles)
+
+            proxy_profile_id = _resolve_proxy_profile_id(client_id)
+            if proxy_profile_id is None:
+                if user and not check_user_stream_limits(user, client_id, media_id=channel_id):
+                    return _stream_limit_response(user)
+                return _handle_redirect_stream(channel, channel_id, client_id, user, allowed_m3u_profiles)
+
+            preview_stream, m3u_profile_id = pick_channel_preview_target(channel, allowed_m3u_profiles)
+            if preview_stream is None or m3u_profile_id is None:
+                return JsonResponse(
+                    {"error": "No compatible streams available for preview"},
+                    status=503,
+                )
+            if not preview_stream.stream_hash:
+                return JsonResponse(
+                    {"error": "Stream has no preview id"},
+                    status=503,
+                )
+
+            channel_id = preview_worker_id(preview_stream.stream_hash, m3u_profile_id)
+            channel = preview_stream
+            channel_display_name = getattr(preview_stream, "name", channel_display_name)
+            override_stream_profile_id = proxy_profile_id
+            logger.info(f"[{client_id}] skip_redirect channel preview remapped to stream worker {channel_id}")
+
+        elif isinstance(channel, Stream) and skip_redirect_requested:
+            if not channel.stream_hash:
+                return JsonResponse(
+                    {"error": "Stream has no preview id"},
+                    status=503,
+                )
+            m3u_profile_id = pick_stream_m3u_profile_id(channel, allowed_m3u_profiles)
+            if m3u_profile_id is None:
+                return JsonResponse(
+                    {"error": "No compatible M3U profile available for preview"},
+                    status=503,
+                )
+            channel_id = preview_worker_id(channel.stream_hash, m3u_profile_id)
+            logger.info(f"[{client_id}] skip_redirect stream preview scoped to worker {channel_id}")
+
+            if stream_profile.is_redirect():
+                proxy_profile_id = _resolve_proxy_profile_id(client_id)
+                if proxy_profile_id is None:
+                    return JsonResponse(
+                        {"error": "Proxy stream profile not found"},
+                        status=500,
+                    )
+                override_stream_profile_id = proxy_profile_id
+
+        if user and not check_user_stream_limits(user, client_id, media_id=channel_id):
+            return _stream_limit_response(user)
+
+        if ChannelService.is_channel_unavailable_for_new_clients(channel_id):
+            logger.info(f"[{client_id}] Channel {channel_id} unavailable. Teardown or pending shutdown")
+            return _channel_stopping_response()
+
+        # Check if we need to reinitialize the channel
+        needs_initialization, channel_state, channel_initializing = _channel_setup_needed(proxy_server, channel_id)
+        if channel_state == ChannelState.STOPPING:
+            logger.info(f"[{client_id}] Channel {channel_id} is stopping, rejecting request")
+            return _channel_stopping_response()
+        if channel_initializing:
+            logger.debug(f"[{client_id}] Channel {channel_id} is still initializing, client will wait")
+        elif not needs_initialization:
+            logger.debug(f"[{client_id}] Channel {channel_id} in state {channel_state}, skipping initialization")
+        elif channel_state in (ChannelState.ERROR, ChannelState.STOPPED):
+            logger.info(f"[{client_id}] Channel {channel_id} in terminal state {channel_state}, will reinitialize")
+
+        resolved_output_profile = None
+        resolved_output_format = None
+        output_options_resolved = False
+
+        # Start initialization if needed
+        if needs_initialization:
+            if ChannelService.is_channel_unavailable_for_new_clients(channel_id):
+                logger.info(f"[{client_id}] Channel {channel_id} became unavailable before init, rejecting")
+                return _channel_stopping_response()
+
+            logger.info(f"[{client_id}] Starting channel {channel_id} initialization")
+            # Force cleanup of any previous instance if in terminal state
+            if channel_state in [
+                ChannelState.ERROR,
+                ChannelState.STOPPING,
+                ChannelState.STOPPED,
+            ]:
+                logger.warning(f"[{client_id}] Channel {channel_id} in state {channel_state}, forcing cleanup")
+                ChannelService.stop_channel(channel_id)
+
+            perform_setup = False
+            owned_for_init = False
+            init_lock = proxy_server._get_channel_init_lock(channel_id)
+            init_lock.acquire()
+            try:
+                needs_setup, channel_state, wait_for_init = _channel_setup_needed(proxy_server, channel_id)
+                if channel_state == ChannelState.STOPPING or (
+                    ChannelService.is_channel_unavailable_for_new_clients(channel_id)
+                ):
+                    logger.info(f"[{client_id}] Channel {channel_id} unavailable after init lock, rejecting")
+                    return _channel_stopping_response()
+
+                if not needs_setup:
+                    if wait_for_init:
+                        channel_initializing = True
+                    logger.info(
+                        f"[{client_id}] Channel {channel_id} already set up after init lock "
+                        f"(state={channel_state}), attaching as follower"
+                    )
+                elif channel_id in proxy_server._channels_setting_up:
+                    channel_initializing = True
+                    logger.info(
+                        f"[{client_id}] Channel {channel_id} setup already in progress on this "
+                        f"worker, skipping stream reservation and attaching as follower"
+                    )
+                elif not proxy_server.try_acquire_ownership(channel_id):
+                    channel_initializing = True
+                    logger.info(
+                        f"[{client_id}] Channel {channel_id} owned by another worker, "
+                        f"skipping stream reservation and attaching as follower"
+                    )
+                else:
+                    owned_for_init = True
+                    proxy_server._channels_setting_up.add(channel_id)
+                    perform_setup = True
+            finally:
+                proxy_server._finish_channel_init_lock(channel_id, init_lock)
+
+            if perform_setup:
+                try:
+                    (
+                        stream_url,
+                        stream_user_agent,
+                        transcode,
+                        profile_value,
+                        slot_reserved,
+                        error_reason,
+                        resolved_stream_id,
+                        attempt,
+                        wait_start_time,
+                    ) = _obtain_stream_with_retries(
+                        channel_id,
+                        client_id,
+                        user,
+                        allowed_m3u_profiles,
+                        override_stream_profile_id=override_stream_profile_id,
+                    )
+
+                    if stream_url is None:
+                        if slot_reserved and not release_worker_stream(channel_id):
+                            logger.debug(f"[{client_id}] release_stream found no keys during failed init cleanup")
+
+                        # Get the specific error message if available
+                        wait_duration = f"{int(time.time() - wait_start_time)}s"
+                        error_msg = error_reason if error_reason else "No available streams for this channel"
+                        logger.info(
+                            f"[{client_id}] Failed to obtain stream after {attempt} attempts over {wait_duration}: {error_msg}"
+                        )
+                        return JsonResponse(
+                            {"error": error_msg, "waited": wait_duration}, status=503
+                        )  # 503 Service Unavailable is appropriate here
+
+                    # generate_stream_url() called get_stream() which allocated a connection
+                    # slot (INCR'd profile_connections) - track this for cleanup on error
+                    if needs_initialization and slot_reserved:
+                        connection_allocated = True
+
+                    # generate_stream_url already resolved the stream. Scoped previews
+                    # carry the M3U profile in the worker id; otherwise read it from
+                    # the assignment (channel_stream is keyed by channel pk, and a
+                    # bare Stream has no channel assignment to look up).
+                    stream_id = resolved_stream_id
+                    _stream_key, m3u_profile_id = parse_preview_worker_id(channel_id)
+                    if m3u_profile_id is None and proxy_server.redis_client:
+                        if isinstance(channel, Channel):
+                            stream_id_bytes = proxy_server.redis_client.get(f"channel_stream:{channel.id}")
+                            if stream_id_bytes:
+                                stream_id = int(stream_id_bytes)
+                        profile_id_bytes = proxy_server.redis_client.get(f"stream_profile:{stream_id}")
+                        if profile_id_bytes:
+                            m3u_profile_id = int(profile_id_bytes)
+                    logger.info(
+                        f"Channel {channel_id} using stream ID {stream_id}, m3u account profile ID {m3u_profile_id}"
+                    )
+
+                    # Initialize channel with the stream's user agent (not the client's).
+                    if ChannelService.is_channel_unavailable_for_new_clients(channel_id):
+                        if connection_allocated and not release_worker_stream(channel_id):
+                            logger.warning(f"[{client_id}] Failed to release stream before teardown reject")
+                        connection_allocated = False
+                        logger.info(f"[{client_id}] Channel {channel_id} unavailable before init call, rejecting")
+                        return _channel_stopping_response()
+
+                    success = ChannelService.initialize_channel(
+                        channel_id,
+                        stream_url,
+                        stream_user_agent,
+                        transcode,
+                        profile_value,
+                        stream_id,
+                        m3u_profile_id,
+                        channel_name=channel.name,
+                    )
+
+                    if not success:
+                        if connection_allocated and not release_worker_stream(channel_id):
+                            logger.warning(f"[{client_id}] Failed to release stream after init failure")
+                        connection_allocated = False
+                        return JsonResponse({"error": "Failed to initialize channel"}, status=500)
+
+                    # Channel initialized: lifecycle owns the connection and ownership lock
+                    connection_allocated = False
+                    owned_for_init = False
+
+                    # If we're the owner, register the client now so the watchdog
+                    # doesn't stop the channel during connection (which can take
+                    # longer than the grace period). The generator handles waiting
+                    # with keepalive packets via _wait_for_initialization().
+                    if proxy_server.am_i_owner(channel_id):
+                        resolved_output_profile = _resolve_output_profile(request, user)
+                        resolved_output_format = _resolve_output_format(user, force_output_format, request)
+                        output_options_resolved = True
+                        resolved_format = (
+                            f"{resolved_output_format}:p{resolved_output_profile.id}"
+                            if resolved_output_profile
+                            else resolved_output_format
+                        )
+                        client_manager = proxy_server.client_managers[channel_id]
+                        if not client_manager.add_client(
+                            client_id,
+                            client_ip,
+                            client_user_agent,
+                            user,
+                            output_format=resolved_output_format,
+                            output_profile_id=resolved_output_profile.id if resolved_output_profile else None,
+                        ):
+                            logger.error(
+                                f"[{client_id}] Failed to register client with channel {channel_id} during init"
+                            )
+                            return JsonResponse({"error": "Failed to register client"}, status=503)
+                        logger.info(
+                            f"[{client_id}] Client registered with channel {channel_id} "
+                            f"(output: {resolved_format}, profile: {resolved_output_profile.id if resolved_output_profile else None})"
+                        )
+                        _client_pre_registered = True
+
+                    logger.info(f"[{client_id}] Successfully initialized channel {channel_id}")
+                    channel_initializing = True
+                finally:
+                    proxy_server._clear_channel_setting_up(channel_id)
+                    if owned_for_init:
+                        proxy_server.release_ownership(channel_id, signal_stopping=False)
+
+        # Register client - can do this regardless of initialization state
+        # Create local resources if needed
+        if channel_id not in proxy_server.stream_buffers or channel_id not in proxy_server.client_managers:
+            logger.debug(
+                f"[{client_id}] Channel {channel_id} exists in Redis but not initialized in this worker - initializing now"
+            )
+
+            # Get URL from Redis metadata
+            url = None
+            stream_user_agent = None  # Initialize the variable
+
+            if proxy_server.redis_client:
+                metadata_key = RedisKeys.channel_metadata(channel_id)
+                url_bytes, ua_bytes, profile_bytes = proxy_server.redis_client.hmget(
+                    metadata_key,
+                    ChannelMetadataField.URL,
+                    ChannelMetadataField.USER_AGENT,
+                    ChannelMetadataField.STREAM_PROFILE,
+                )
+
+                if url_bytes:
+                    url = url_bytes
+                if ua_bytes:
+                    stream_user_agent = ua_bytes
+                # Extract transcode setting from Redis
+                if profile_bytes:
+                    profile_str = profile_bytes
+                    use_transcode = profile_str == PROXY_PROFILE_NAME or profile_str == "None"
+                    logger.debug(f"Using profile '{profile_str}' for channel {channel_id}, transcode={use_transcode}")
+                else:
+                    # Default settings when profile not found in Redis
+                    profile_str = "None"  # Default profile name
+                    use_transcode = False  # Default to direct streaming without transcoding
+                    logger.debug(
+                        f"No profile found in Redis for channel {channel_id}, defaulting to transcode={use_transcode}"
+                    )
+
+            # Use client_user_agent as fallback if stream_user_agent is None
+            success = proxy_server.initialize_channel(
+                url,
+                channel_id,
+                stream_user_agent or client_user_agent,
+                use_transcode,
+                channel_name=channel_display_name,
+            )
+            if not success:
+                logger.error(f"[{client_id}] Failed to initialize channel {channel_id} locally")
+                return JsonResponse({"error": "Failed to initialize channel locally"}, status=500)
+
+            logger.info(f"[{client_id}] Successfully initialized channel {channel_id} locally")
+
+        if ChannelService.is_channel_unavailable_for_new_clients(channel_id):
+            if _client_pre_registered:
+                _drop_pre_registered_client(proxy_server, channel_id, client_id)
+            logger.info(f"[{client_id}] Channel {channel_id} became unavailable during setup, rejecting")
+            return _channel_stopping_response()
+
+        if not output_options_resolved:
+            resolved_output_profile = _resolve_output_profile(request, user)
+            resolved_output_format = _resolve_output_format(user, force_output_format, request)
+        # When an output profile is active, append :p{id} to the format key so each
+        # (format, profile) pair gets its own independent remux pipeline in Redis.
+        resolved_format = (
+            f"{resolved_output_format}:p{resolved_output_profile.id}"
+            if resolved_output_profile
+            else resolved_output_format
+        )
+
+        # Pre-register before slow setup (ensure_output_profile) so the non-owner
+        # cleanup thread does not tear down local resources while connecting.
+        if not _client_pre_registered:
+            client_manager = proxy_server.client_managers.get(channel_id)
+            if not client_manager:
+                logger.error(f"[{client_id}] Channel {channel_id} missing client_manager during setup")
+                return JsonResponse({"error": "Channel resources unavailable"}, status=503)
+            if not client_manager.add_client(
+                client_id,
+                client_ip,
+                client_user_agent,
+                user,
+                output_format=resolved_output_format,
+                output_profile_id=resolved_output_profile.id if resolved_output_profile else None,
+            ):
+                logger.error(f"[{client_id}] Failed to register client with channel {channel_id}")
+                return JsonResponse({"error": "Failed to register client"}, status=503)
+            _client_pre_registered = True
+            logger.info(
+                f"[{client_id}] Client registered with channel {channel_id} "
+                f"(output: {resolved_format}, profile: {resolved_output_profile.id if resolved_output_profile else None})"
+            )
+
+        if resolved_output_profile:
+            cmd = resolved_output_profile.build_command()
+            if not proxy_server.ensure_output_profile(channel_id, resolved_output_profile.id, cmd):
+                if _client_pre_registered:
+                    _drop_pre_registered_client(proxy_server, channel_id, client_id)
+                return JsonResponse({"error": "Failed to start output profile transcode"}, status=500)
+
+        source_buffer = proxy_server.get_buffer(
+            channel_id, profile=resolved_output_profile.id if resolved_output_profile else None
+        )
+        client_manager = proxy_server.client_managers.get(channel_id)
+        if not client_manager:
+            if _client_pre_registered:
+                _drop_pre_registered_client(proxy_server, channel_id, client_id)
+            logger.error(f"[{client_id}] Channel {channel_id} client_manager removed during setup")
+            return JsonResponse({"error": "Channel resources unavailable"}, status=503)
+
+        if resolved_output_format == "fmp4":
+            if not proxy_server.ensure_output_format(
+                channel_id,
+                resolved_format,
+                source_buffer=source_buffer if resolved_output_profile else None,
+            ):
+                if _client_pre_registered:
+                    _drop_pre_registered_client(proxy_server, channel_id, client_id)
+                return JsonResponse({"error": "Failed to start output format remux"}, status=500)
+            generate = create_fmp4_stream_generator(
+                channel_id,
+                client_id,
+                client_ip,
+                client_user_agent,
+                channel_initializing,
+                user=user,
+                fmt=resolved_format,
+                channel_name=channel_display_name,
+            )
+            content_type = "video/mp4"
+        else:
+            generate = create_stream_generator(
+                channel_id,
+                client_id,
+                client_ip,
+                client_user_agent,
+                channel_initializing,
+                user=user,
+                buffer=source_buffer,
+                channel_name=channel_display_name,
+            )
+            content_type = "video/mp2t"
+
+        response = StreamingHttpResponse(streaming_content=generate(), content_type=content_type)
+        response["Cache-Control"] = "no-cache"
+        return response
+
+    except Http404:
+        raise
+    except Exception as e:
+        logger.error(f"Error in stream_ts: {e}", exc_info=True)
+        if connection_allocated and channel is not None:
+            try:
+                if not release_worker_stream(channel_id):
+                    logger.warning(f"[{client_id}] Failed to release stream in exception handler")
+            except Exception:
+                pass
+        # Client may have been pre-registered (before ensure_output_profile /
+        # get_buffer / generator setup) to protect against the non-owner
+        # cleanup thread. If setup then failed with an unhandled exception,
+        # remove it so it doesn't linger as a phantom connection.
+        if _client_pre_registered:
+            try:
+                _drop_pre_registered_client(proxy_server, channel_id, client_id)
+            except Exception:
+                logger.warning(f"[{client_id}] Failed to remove client during exception cleanup")
+        return JsonResponse({"error": str(e)}, status=500)
+    finally:
+        # Runs before StreamingHttpResponse is handed to the WSGI server, so the
+        # request greenlet does not hold a pool slot for the life of the stream.
+        # Also covers Http404 from get_stream_object (re-raised above).
+        close_old_connections()
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def stream_xc(request, username, password, channel_id):
+    try:
+        user = get_object_or_404(User, username=username)
+
+        extension = pathlib.Path(channel_id).suffix
+        channel_id = pathlib.Path(channel_id).stem
+
+        if not network_access_allowed(request, "STREAMS", user):
+            return Response({"error": "Forbidden"}, status=403)
+
+        custom_properties = user.custom_properties or {}
+
+        if "xc_password" not in custom_properties:
+            return Response({"error": "Invalid credentials"}, status=401)
+
+        if custom_properties["xc_password"] != password:
+            return Response({"error": "Invalid credentials"}, status=401)
+
+        if user.user_level < 10:
+            user_profile_count = user.channel_profiles.count()
+
+            # If user has ALL profiles or NO profiles, give unrestricted access
+            if user_profile_count == 0:
+                # No profile filtering - user sees all channels based on user_level
+                filters = {"id": int(channel_id), "user_level__lte": user.user_level}
+                channel = Channel.objects.filter(**filters).first()
+            else:
+                # User has specific limited profiles assigned
+                filters = {
+                    "id": int(channel_id),
+                    "channelprofilemembership__enabled": True,
+                    "user_level__lte": user.user_level,
+                    "channelprofilemembership__channel_profile__in": user.channel_profiles.all(),
+                }
+                channel = Channel.objects.filter(**filters).distinct().first()
+
+            if not channel:
+                return JsonResponse({"error": "Not found"}, status=404)
+        else:
+            channel = get_object_or_404(Channel, id=channel_id)
+
+        if extension.lower() == ".mp4":
+            force_format = "fmp4"
+        elif extension.lower() == ".ts":
+            force_format = "mpegts"
+        else:
+            force_format = None
+        return stream_ts(request._request, str(channel.uuid), user, force_output_format=force_format)
+    except Http404:
+        raise
+    finally:
+        # Auth/channel lookup ORM above; stream_ts also releases on its own paths.
+        close_old_connections()
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAdmin])
+def change_stream(request, channel_id):
+    """Change stream URL for existing channel with enhanced diagnostics"""
+    proxy_server = ProxyServer.get_instance()
+
+    try:
+        data = json.loads(request.body)
+        new_url = data.get("url")
+        user_agent = data.get("user_agent")
+        stream_id = data.get("stream_id")
+        m3u_profile_id = None
+        stream_name = None
+
+        # If stream_id is provided, get the URL and user_agent from it
+        if stream_id:
+            logger.info(f"Stream ID {stream_id} provided, looking up stream info for channel {channel_id}")
+            stream_info = get_stream_info_for_switch(channel_id, stream_id)
+
+            if "error" in stream_info:
+                return JsonResponse({"error": stream_info["error"], "stream_id": stream_id}, status=404)
+
+            # Use the info from the stream
+            new_url = stream_info["url"]
+            user_agent = stream_info["user_agent"]
+            m3u_profile_id = stream_info.get("m3u_profile_id")
+            stream_name = stream_info.get("stream_name")
+        elif not new_url:
+            return JsonResponse({"error": "Either url or stream_id must be provided"}, status=400)
+
+        logger.info(f"Attempting to change stream for channel {channel_id} to {new_url}")
+
+        # Use the service layer instead of direct implementation
+        # Pass stream_id to ensure proper connection tracking
+        result = ChannelService.change_stream_url(
+            channel_id, new_url, user_agent, stream_id, m3u_profile_id, stream_name=stream_name
+        )
+
+        if result.get("status") == "error":
+            return JsonResponse(
+                {
+                    "error": result.get("message", "Unknown error"),
+                    "diagnostics": result.get("diagnostics", {}),
+                },
+                status=404,
+            )
+
+        if result.get("success") is False:
+            error_data = {
+                "error": result.get("message", result.get("error", "Stream switch failed")),
+                "channel": channel_id,
+                "url": new_url,
+                "owner": result.get("direct_update", False),
+                "worker_id": proxy_server.worker_id,
+            }
+            if stream_id:
+                error_data["stream_id"] = stream_id
+            # confirmed=False means owner never responded (504); owner reported failure (502)
+            status_code = 504 if result.get("confirmed") is False else 502
+            return JsonResponse(error_data, status=status_code)
+
+        # Format response based on whether it was a direct update or event-based
+        response_data = {
+            "message": "Stream changed successfully",
+            "channel": channel_id,
+            "url": new_url,
+            "owner": result.get("direct_update", False),
+            "worker_id": proxy_server.worker_id,
+        }
+
+        # Include stream_id in response if it was used
+        if stream_id:
+            response_data["stream_id"] = stream_id
+
+        return JsonResponse(response_data)
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        logger.error(f"Failed to change stream: {e}", exc_info=True)
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@api_view(["GET"])
+@permission_classes([IsAdmin])
+def channel_status(request, channel_id=None):
+    """
+    Returns status information about channels with detail level based on request:
+    - /status/ returns basic summary of all channels
+    - /status/{channel_id} returns detailed info about specific channel
+    """
+    proxy_server = ProxyServer.get_instance()
+
+    try:
+        # Check if Redis is available
+        if not proxy_server.redis_client:
+            return JsonResponse({"error": "Redis connection not available"}, status=500)
+
+        # Handle single channel or all channels
+        if channel_id:
+            # Detailed info for specific channel
+            channel_info = ChannelStatus.get_detailed_channel_info(channel_id)
+            if channel_info:
+                return JsonResponse(channel_info)
+            else:
+                return JsonResponse({"error": f"Channel {channel_id} not found"}, status=404)
+        else:
+            live_stats = build_live_channel_stats_data(proxy_server.redis_client)
+
+            # Send WebSocket update with the stats
+            # Format it the same way the original Celery task did
+            send_websocket_update(
+                "updates",
+                "update",
+                {
+                    "success": True,
+                    "type": "channel_stats",
+                    "stats": json.dumps(live_stats),
+                },
+            )
+
+            return JsonResponse(live_stats)
+
+    except Exception as e:
+        logger.error(f"Error in channel_status: {e}", exc_info=True)
+        return JsonResponse({"error": str(e)}, status=500)
+    finally:
+        close_old_connections()
+
+
+@csrf_exempt
+@api_view(["POST", "DELETE"])
+@permission_classes([IsAdmin])
+def stop_channel(request, channel_id):
+    """Stop a channel and release all associated resources using PubSub events"""
+    try:
+        logger.info(f"Request to stop channel {channel_id} received")
+
+        # Use the service layer instead of direct implementation
+        result = ChannelService.stop_channel(channel_id)
+
+        if result.get("status") == "error":
+            return JsonResponse({"error": result.get("message", "Unknown error")}, status=404)
+
+        return JsonResponse(
+            {
+                "message": "Channel stop request sent",
+                "channel_id": channel_id,
+                "previous_state": result.get("previous_state"),
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to stop channel: {e}", exc_info=True)
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAdmin])
+def stop_client(request, channel_id):
+    """Stop a specific client connection using existing client management"""
+    try:
+        # Parse request body to get client ID
+        data = json.loads(request.body)
+        client_id = data.get("client_id")
+
+        if not client_id:
+            return JsonResponse({"error": "No client_id provided"}, status=400)
+
+        # Use the service layer instead of direct implementation
+        result = ChannelService.stop_client(channel_id, client_id)
+
+        if result.get("status") == "error":
+            return JsonResponse({"error": result.get("message")}, status=404)
+
+        return JsonResponse(
+            {
+                "message": "Client stop request processed",
+                "channel_id": channel_id,
+                "client_id": client_id,
+                "locally_processed": result.get("locally_processed", False),
+            }
+        )
+
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+    except Exception as e:
+        logger.error(f"Failed to stop client: {e}", exc_info=True)
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAdmin])
+def next_stream(request, channel_id):
+    """Switch to the next available stream for a channel"""
+    proxy_server = ProxyServer.get_instance()
+
+    try:
+        logger.info(f"Request to switch to next stream for channel {channel_id} received")
+
+        # Check if the channel exists
+        channel = get_stream_object(channel_id)
+
+        # First check if channel is active in Redis
+        current_stream_id = None
+        profile_id = None
+
+        if proxy_server.redis_client:
+            metadata_key = RedisKeys.channel_metadata(channel_id)
+            if proxy_server.redis_client.exists(metadata_key):
+                # Get current stream ID from Redis
+                stream_id_bytes = proxy_server.redis_client.hget(metadata_key, ChannelMetadataField.STREAM_ID)
+                if stream_id_bytes:
+                    current_stream_id = int(stream_id_bytes)
+                    logger.info(f"Found current stream ID {current_stream_id} in Redis for channel {channel_id}")
+
+                    # Get M3U profile from Redis if available
+                    profile_id_bytes = proxy_server.redis_client.hget(metadata_key, ChannelMetadataField.M3U_PROFILE)
+                    if profile_id_bytes:
+                        profile_id = int(profile_id_bytes)
+                        logger.info(f"Found M3U profile ID {profile_id} in Redis for channel {channel_id}")
+
+        if not current_stream_id:
+            # Channel is not running
+            return JsonResponse({"error": "No current stream found for channel"}, status=404)
+
+        # Get all streams for this channel in their defined order
+        streams = list(channel.streams.all().order_by("channelstream__order"))
+
+        if len(streams) <= 1:
+            return JsonResponse(
+                {
+                    "error": "No alternate streams available for this channel",
+                    "current_stream_id": current_stream_id,
+                },
+                status=404,
+            )
+
+        # Find the current stream's position in the list
+        current_index = None
+        for i, stream in enumerate(streams):
+            if stream.id == current_stream_id:
+                current_index = i
+                break
+
+        if current_index is None:
+            logger.warning(f"Current stream ID {current_stream_id} not found in channel's streams list")
+            # Fall back to the first stream that's not the current one
+            next_stream = next((s for s in streams if s.id != current_stream_id), None)
+            if not next_stream:
+                return JsonResponse(
+                    {
+                        "error": "Could not find current stream in channel list",
+                        "current_stream_id": current_stream_id,
+                    },
+                    status=404,
+                )
+        else:
+            # Get the next stream in the rotation (with wrap-around)
+            next_index = (current_index + 1) % len(streams)
+            next_stream = streams[next_index]
+
+        next_stream_id = next_stream.id
+        logger.info(f"Rotating to next stream ID {next_stream_id} for channel {channel_id}")
+
+        # Get full stream info including URL for the next stream
+        stream_info = get_stream_info_for_switch(channel_id, next_stream_id)
+
+        if "error" in stream_info:
+            return JsonResponse(
+                {
+                    "error": stream_info["error"],
+                    "current_stream_id": current_stream_id,
+                    "next_stream_id": next_stream_id,
+                },
+                status=404,
+            )
+
+        # Now use the ChannelService to change the stream URL
+        result = ChannelService.change_stream_url(
+            channel_id,
+            stream_info["url"],
+            stream_info["user_agent"],
+            next_stream_id,
+            stream_info.get("m3u_profile_id"),
+            stream_name=stream_info.get("stream_name"),
+        )
+
+        if result.get("status") == "error":
+            return JsonResponse(
+                {
+                    "error": result.get("message", "Unknown error"),
+                    "diagnostics": result.get("diagnostics", {}),
+                    "current_stream_id": current_stream_id,
+                    "next_stream_id": next_stream_id,
+                },
+                status=404,
+            )
+
+        if result.get("success") is False:
+            return JsonResponse(
+                {
+                    "error": result.get("message", result.get("error", "Stream switch failed")),
+                    "current_stream_id": current_stream_id,
+                    "next_stream_id": next_stream_id,
+                    "owner": result.get("direct_update", False),
+                    "worker_id": proxy_server.worker_id,
+                },
+                status=504 if result.get("confirmed") is False else 502,
+            )
+
+        # Format success response
+        response_data = {
+            "message": "Stream switched to next available",
+            "channel": channel_id,
+            "previous_stream_id": current_stream_id,
+            "new_stream_id": next_stream_id,
+            "new_url": stream_info["url"],
+            "owner": result.get("direct_update", False),
+            "worker_id": proxy_server.worker_id,
+        }
+
+        return JsonResponse(response_data)
+
+    except Http404:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to switch to next stream: {e}", exc_info=True)
+        return JsonResponse({"error": str(e)}, status=500)
+    finally:
+        close_old_connections()
