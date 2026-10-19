@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The [`backup_volumes.sh`](./scripts/backup_volumes.sh) script now backs up Postgres databases cleanly using the `pg_dumpall` command.
 - Mounted a logs directory for Caddy, so that fail2ban can use them.
 
 ### Fixed
