@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - New CI workflows for validating compose files and linting scripts + workflows.
 
+### Fixed
+
+- The healthcheck for `seerr` was fixed to use `|| exit 1` instead of `| exit 1`.
+
 ## [1.8.0] - 2026/10/17
 
 ### Added
