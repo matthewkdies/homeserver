@@ -26,3 +26,4 @@ sunshine/*.log
 .superpowers/
 .worktrees
 .worktrees/
+compose/monitoring/grafana/provisioning/alerting/contact-points.yml
