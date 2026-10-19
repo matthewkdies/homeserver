@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.9.0] - 2026/10/18
+## [2.0.0] - 2026/10/18
 
 ### Added
 
+- [Grafana](https://grafana.com/) (and [Prometheus](https://prometheus.io/)) for logging and observability into the home server.
 - [paperless-ngx](https://docs.paperless-ngx.com/) for transforming physical documents into a searchable online archive using OCR.
 - [dozzle](https://dozzle.dev/), a real-time Docker log viewer.
 - [recyclarr](https://recyclarr.dev/), to sync Sonarr, Radarr, and Lidarr with the TRaSH Guides.
