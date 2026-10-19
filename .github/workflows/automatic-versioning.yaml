@@ -20,17 +20,17 @@ jobs:
         run: |
           VERSION=$(grep -oP '## \[\K[0-9]+\.[0-9]+\.[0-9]+' changelog.md | head -n 1)
           echo "Latest version: $VERSION"
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
 
       - name: Check if Release Already Exists
         id: check_release
         run: |
           # List all releases and check if the version already exists
-          RELEASE_EXISTS=$(gh release list --repo $GITHUB_REPOSITORY | grep -w "${{ env.VERSION }}" || true)
+          RELEASE_EXISTS=$(gh release list --repo "$GITHUB_REPOSITORY" | grep -w "${{ env.VERSION }}" || true)
           if [ -n "$RELEASE_EXISTS" ]; then
             echo "Release ${{ env.VERSION }} already exists."
             echo "If this is intended to be a release, update the changelog and push again."
-            echo "RELEASE_EXISTS=true" >> $GITHUB_ENV
+            echo "RELEASE_EXISTS=true" >> "$GITHUB_ENV"
             exit 0
           fi
         env:
