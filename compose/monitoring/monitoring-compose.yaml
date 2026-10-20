@@ -125,7 +125,7 @@ services:
       - no-new-privileges:true
 
   grafana:
-    image: grafana/grafana:11.2.0@sha256:408afb9726de5122b00a2576763a8a57a3c86d5b0eff5305bc994ceb3eb96c3f
+    image: grafana/grafana:11.2.10-security-01@sha256:4ccffa04ef20f8b32aa8732a8c4dfc5a43b61004dba67dbe91063cd71284ff9f
     container_name: grafana
     restart: unless-stopped
     environment:
