@@ -47,13 +47,17 @@
 	}
 }
 
-(cloudflare_dns) {
-	# routes an application with cloudflare
-	# this could *probably* be a global setting, but just in case we don't want something publicly routed, it's a snippet
+(cloudflare_tls) {
 	tls {
 		dns cloudflare {env.CLOUDFLARE_API_TOKEN}
 		resolvers 1.1.1.1 1.1.1.2
 	}
+}
+
+(cloudflare_dns) {
+	# routes an application with cloudflare
+	# this could *probably* be a global setting, but just in case we don't want something publicly routed, it's a snippet
+	import cloudflare_tls
 	import security_headers
 }
 
