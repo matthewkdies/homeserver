@@ -1,4 +1,8 @@
 # Adding a New Web-app in Caddy
+
+> [!NOTE]
+> For a full architectural deep-dive into how Caddy, Pi-hole (split-horizon DNS), and Cloudflare (dynamic DNS, DNS-01 ACME, trusted proxies, and firewall rules) fit together, see the **[Cloudflare, Pi-hole, and Caddy Integration Guide](./cloudflare-pihole-integration.md)**.
+
 ## Table of Contents
 - [But first... "hairpinning"](#but-first-hairpinning)
 - [Pi-hole](#pi-hole)

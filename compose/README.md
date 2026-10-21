@@ -1,6 +1,9 @@
 Each directory in this current directory contains some combination of Docker Compose files, Dockerfiles, healthcheck scripts, further configuration files, and documentation regarding one or more Docker containers.
 At the bare minimum, you'll find a Docker Compose file in each.
 Each of these files has some notes and documentation about the contents of the file and the container as a whole.
+
+For an overarching guide on how reverse proxying, DNS, and secure domain routing work across the homelab, see the **[Cloudflare, Pi-hole, and Caddy Integration Guide](./caddy/cloudflare-pihole-integration.md)**.
+
 Now, enjoy this sweet ASCII art of Calvin:
 
 ```

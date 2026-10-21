@@ -64,7 +64,7 @@ Beyond that, starting a stack is as simple as `docker compose --file <path_to_fi
 | **Ollama** | AI & Local LLM | Local LLM inference backend with NVIDIA GPU acceleration | `Internal Service` | [`llm`](./compose/llm/llm-compose.yaml) |
 | **Open-WebUI** | AI & Local LLM | Web chat interface and agent orchestration for local LLMs | `Local Network Only` | [`llm`](./compose/llm/llm-compose.yaml) |
 | **Authelia** | Core & Ingress | Single Sign-On (SSO) and Multi-Factor Authentication | `Local Network + MFA` | [`authelia`](./compose/authelia/authelia-compose.yaml) |
-| **Caddy** | Core & Ingress | Reverse proxy with automatic HTTPS and Cloudflare DNS | `Public (Edge)` | [`caddy`](./compose/caddy/caddy-compose.yaml) |
+| **Caddy** | Core & Ingress | Reverse proxy with automatic HTTPS and Cloudflare DNS ([Guide](./compose/caddy/cloudflare-pihole-integration.md)) | `Public (Edge)` | [`caddy`](./compose/caddy/caddy-compose.yaml) |
 | **Dozzle** | Core & Ingress | Real-time container log viewer and resource monitor | `Local Network + MFA` | [`dozzle`](./compose/dozzle/dozzle-compose.yaml) |
 | **Ntfy** | Core & Ingress | Self-hosted push notification service for alerts | `Local Network Only` | [`ntfy`](./compose/ntfy/ntfy-compose.yaml) |
 | **Pi-hole** | Core & Ingress | Network-wide ad and tracker blocking DNS sinkhole | `Local Network Only` | [`pihole`](./compose/pihole/pihole-nas-compose.yaml) |
@@ -103,6 +103,7 @@ Beyond that, starting a stack is as simple as `docker compose --file <path_to_fi
 # Basic Structure
 
 - [`compose/`](./compose/): Contains the Docker Compose files, Dockerfiles, configuration files, healthscripts, and documentation related to the Docker containers on my home server.
+  - [**Cloudflare, Pi-hole, and Caddy Integration Guide**](./compose/caddy/cloudflare-pihole-integration.md): Comprehensive architecture guide covering split-horizon DNS, dynamic DNS automation, DNS-01 ACME TLS certificates, and defense-in-depth access controls.
 - [`scripts/`](./scripts/): Contains the scripts that I use within containers and in common use.
 - [`changelog.md`](./changelog.md): Documentation on updates to the repository.
 - [`prek.toml`](./prek.toml): A `prek` config file that runs the [`detect-secrets`](https://github.com/Yelp/detect-secrets) CLI to prevent secrets from inadvertantly being committed to the remote repository.
