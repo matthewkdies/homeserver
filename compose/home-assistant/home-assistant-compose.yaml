@@ -20,6 +20,9 @@ services:
     devices:
       # add zigbee receiver dongle
       - /dev/serial/by-id/usb-ITead_Sonoff_Zigbee_3.0_USB_Dongle_Plus_b8cc601f2b15f0118e26e374b887153e-if00-port0
+    cap_add:
+      - NET_ADMIN # allows Bluetooth/hardware discovery on Linux
+      - NET_RAW # allows Bluetooth/hardware discovery on Linux
     environment:
       TZ: America/New_York
     # privileged: true grants the container access to underlying system hardware
