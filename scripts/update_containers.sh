@@ -77,10 +77,29 @@ COMMITS_LOG=$(git log --pretty=format:"• %s" "${LOCAL_MAIN}..${REMOTE_MAIN}")
 RECREATED_CONTAINERS=""
 FAILED_STACKS=""
 
+# Stacks that should not be auto-deployed on this host (e.g. remote servers, NAS, etc.)
+EXCLUDED_STACKS=("pihole")
+
+is_stack_excluded() {
+	local target="$1"
+	for excluded in "${EXCLUDED_STACKS[@]}"; do
+		if [ "${excluded}" = "${target}" ]; then
+			return 0
+		fi
+	done
+	return 1
+}
+
 for compose_file in "${COMPOSE_DIR}"/*/*compose.y*ml; do
 	[ -f "${compose_file}" ] || continue
 
 	stack_name=$(basename "$(dirname "${compose_file}")")
+
+	if is_stack_excluded "${stack_name}"; then
+		log_to_file "Skipping stack: ${stack_name} (excluded from local deployment)" "${LOG_FILE}"
+		continue
+	fi
+
 	log_to_file "Checking stack: ${stack_name}..." "${LOG_FILE}"
 
 	if ! output=$(docker compose -f "${compose_file}" up -d --remove-orphans 2>&1); then
