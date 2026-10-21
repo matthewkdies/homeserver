@@ -394,9 +394,22 @@ nas-backup.mattdies.com {
 }
 
 router.mattdies.com {
-	import cloudflare_dns
+	import cloudflare_tls
 	import local_network_only
 	import log_for_app "router"
+
+	# Synology SRM's web interface relies on legacy CGI scripts (such as uistrings.cgi)
+	# which serve Content-Type: text/plain. X-Content-Type-Options: nosniff causes modern
+	# browsers to refuse execution and abort the script, resulting in a blank white page.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		-Server
+		-X-Powered-By
+	}
+
 	reverse_proxy 10.144.88.1:7890 # requires that auto-redirect to HTTPS in SRM settings is disabled
 }
 
