@@ -22,7 +22,7 @@ networks:
 
 services:
   node-exporter:
-    image: prom/node-exporter:v1.8.2@sha256:4032c6d5bfd752342c3e631c2f1de93ba6b86c41db6b167b9a35372c139e7706
+    image: prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0
     container_name: node-exporter
     restart: unless-stopped
     command:
@@ -40,7 +40,7 @@ services:
       - no-new-privileges:true
 
   smartctl-exporter:
-    image: prometheuscommunity/smartctl-exporter:v0.12.0@sha256:d49a659f037db4b0f5adbcabff7f4dc3a8fb691b176a671583362d66a1115c5d
+    image: prometheuscommunity/smartctl-exporter:v0.15.0@sha256:a76e08dbf5db4781fefd1ed81c65ad46ae8d2849dae6b6d3acebcde2fc4e59d6
     container_name: smartctl-exporter
     restart: unless-stopped
     privileged: true
@@ -125,7 +125,7 @@ services:
       - no-new-privileges:true
 
   grafana:
-    image: grafana/grafana:11.2.0@sha256:408afb9726de5122b00a2576763a8a57a3c86d5b0eff5305bc994ceb3eb96c3f
+    image: grafana/grafana:11.2.10-security-01@sha256:4ccffa04ef20f8b32aa8732a8c4dfc5a43b61004dba67dbe91063cd71284ff9f
     container_name: grafana
     restart: unless-stopped
     environment:
