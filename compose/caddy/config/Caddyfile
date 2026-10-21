@@ -5,6 +5,7 @@
 ### GLOBAL OPTIONS
 ### --------------
 {
+	admin :2019
 	metrics
 	# debug  # uncomment to enable debug mode
 	servers {
@@ -159,10 +160,6 @@ grafana.mattdies.com {
 	import local_network_only
 	import log_for_app "grafana"
 	reverse_proxy grafana:3000
-}
-
-:2019 {
-	metrics /metrics
 }
 
 paperless.mattdies.com {
