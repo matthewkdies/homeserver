@@ -35,7 +35,8 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro,rslave
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.34
     security_opt:
       - no-new-privileges:true
 
@@ -49,7 +50,8 @@ services:
       - /dev/nvme0n1:/dev/nvme0n1
       - /dev/nvme0:/dev/nvme0
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.35
 
   nvidia-gpu-exporter:
     image: utkuozdemir/nvidia_gpu_exporter:1.15.1@sha256:7aee2d42836ad29d4adb2722b7cfdc806ec9cc8d45fd0b8971ebbad2d9f3d087
@@ -66,7 +68,8 @@ services:
               count: 1
               capabilities: [gpu]
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.36
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.51.0@sha256:771a65c7877817cd9bb4c2d9eecb9fd1ac56f370287617658c51a35061efa71a
@@ -87,7 +90,8 @@ services:
       - '--housekeeping_interval=15s'
       - '--disable_metrics=percpu,sched,tcp,udp,disk,hugetlb'
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.37
 
   tautulli-exporter:
     build:
@@ -103,7 +107,8 @@ services:
     secrets:
       - tautulli_api_key
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.38
     security_opt:
       - no-new-privileges:true
 
@@ -120,7 +125,8 @@ services:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.39
     security_opt:
       - no-new-privileges:true
 
@@ -145,6 +151,7 @@ services:
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     networks:
-      - webapps
+      webapps:
+        ipv4_address: 172.19.0.40
     depends_on:
       - prometheus
