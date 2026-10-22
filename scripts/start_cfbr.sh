@@ -11,5 +11,13 @@ fi
 
 export DISPLAY="${DISPLAY:-:0}"
 
+# Wait briefly for Sunshine to initialize the virtual controller on stream start
+for _ in $(seq 1 15); do
+	if grep -q "Wireless Controller\|Microsoft X-Box" /proc/bus/input/devices 2>/dev/null; then
+		break
+	fi
+	sleep 0.2
+done
+
 # Launch RPCS3 directly with the game
 exec "$RPCS3_BIN" "$GAME_EBOOT"
