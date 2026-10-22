@@ -44,10 +44,10 @@ cleanup() {
 	if [ -n "${ORIGINAL_BRANCH:-}" ] && [ "$(git branch --show-current)" != "${ORIGINAL_BRANCH}" ]; then
 		log_to_file "Returning to original branch: ${ORIGINAL_BRANCH}" "${LOG_FILE}"
 		git checkout "${ORIGINAL_BRANCH}" --quiet || true
-		if [ "${WAS_DIRTY}" = true ]; then
-			log_to_file "Restoring stashed changes on ${ORIGINAL_BRANCH}..." "${LOG_FILE}"
-			git stash pop --quiet || true
-		fi
+	fi
+	if [ "${WAS_DIRTY}" = true ]; then
+		log_to_file "Restoring stashed changes on ${ORIGINAL_BRANCH:-main}..." "${LOG_FILE}"
+		git stash pop --quiet || true
 	fi
 	clean_log_file "${LOG_FILE}" 500
 	exit "${exit_code}"

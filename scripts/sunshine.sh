@@ -50,6 +50,9 @@ restart)
 steam)
 	"${SCRIPT_DIR}/start_steam.sh"
 	;;
+cfbr | ncaa)
+	"${SCRIPT_DIR}/start_cfbr.sh"
+	;;
 update)
 	"${SCRIPT_DIR}/update_sunshine.sh"
 	;;
@@ -57,7 +60,7 @@ setup)
 	sudo "${SCRIPT_DIR}/sunshine-setup.sh"
 	;;
 *)
-	echo "Usage: $0 {start [--steam]|stop|restart [--steam]|status|steam|update|setup}"
+	echo "Usage: $0 {start [--steam]|stop|restart [--steam]|status|steam|cfbr|update|setup}"
 	exit 1
 	;;
 esac
