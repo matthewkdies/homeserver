@@ -16,20 +16,8 @@ services:
     expose:
       - 11434
     environment:
-      - OLLAMA_KEEP_ALIVE=-1
+      - OLLAMA_KEEP_ALIVE=15m
       - OLLAMA_CONTEXT_LENGTH=16384
-    entrypoint: ["/bin/sh", "-c"]
-    command:
-      - |
-        (
-          until /bin/ollama list >/dev/null 2>&1; do
-            sleep 1
-          done
-          echo "Pre-warming Qwen3:8b into VRAM..."
-          /bin/ollama run Qwen3:8b --keepalive -1m ""
-          echo "Qwen3:8b is loaded and ready."
-        ) &
-        exec /bin/ollama serve
     volumes:
       - ollama_data:/root/.ollama
     security_opt:
