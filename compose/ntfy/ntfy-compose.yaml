@@ -24,7 +24,7 @@ secrets:
 
 services:
   ntfy:
-    image: binwiederhier/ntfy:v2@sha256:59250e1d8be2ee2186c4560322f625faef22ace380331f05b63f8842dbd62602
+    image: binwiederhier/ntfy:v2@sha256:29bc952294d58957f6ca6638eca9a653a33555989224edbdf4bb9433ee606497
     container_name: ntfy
     hostname: ntfy
     command: serve
