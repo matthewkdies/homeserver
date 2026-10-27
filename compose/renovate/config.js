@@ -14,7 +14,9 @@ module.exports = {
   requireConfig: 'optional',
   extends: ['config:recommended', 'docker:pinDigests'],
   pinDigests: true,
-  dockerMaxPages: 1000,
+  dockerMaxPages: 50,
+  minimumReleaseAgeBehaviour: 'timestamp-optional',
+  internalChecksFilter: 'flexible',
   'docker-compose': {
     managerFilePatterns: [
       '/(^|/)[^/]+-compose\\.ya?ml$/',

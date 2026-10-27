@@ -7,6 +7,8 @@
   "dependencyDashboard": true,
   "timezone": "America/New_York",
   "pinDigests": true,
+  "minimumReleaseAgeBehaviour": "timestamp-optional",
+  "internalChecksFilter": "flexible",
   "docker-compose": {
     "managerFilePatterns": [
       "/(^|/)[^/]+-compose\\.ya?ml$/",
@@ -54,6 +56,12 @@
     {
       "description": "Immediate release for patch, digest, and pin updates",
       "matchUpdateTypes": ["patch", "pin", "digest", "pinDigest"],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "Exempt Renovate runner from minor stability delay due to multiple daily releases",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["renovate/renovate"],
       "minimumReleaseAge": null
     },
     {
