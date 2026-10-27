@@ -79,7 +79,7 @@ services:
 
   # movie monitoring + management
   radarr:
-    image: linuxserver/radarr:6.4.4.10685-ls322@sha256:ff4430fe2d6159b4dbaac9903acfecee5aa68dec8c929259e2f3114c63f7a09e
+    image: linuxserver/radarr:6.4.4.10685-ls324@sha256:084b3b2ab1d0ef930660727259546a241f2bdf67c9ed085d54bf1486a6887c9b
     container_name: radarr
     hostname: radarr
     environment:
@@ -109,7 +109,7 @@ services:
     restart: unless-stopped
 
   radarr4k:
-    image: linuxserver/radarr:6.4.4.10685-ls322@sha256:ff4430fe2d6159b4dbaac9903acfecee5aa68dec8c929259e2f3114c63f7a09e
+    image: linuxserver/radarr:6.4.4.10685-ls324@sha256:084b3b2ab1d0ef930660727259546a241f2bdf67c9ed085d54bf1486a6887c9b
     container_name: radarr4k
     hostname: radarr4k
     environment:
