@@ -1,5 +1,13 @@
-FROM ghcr.io/mm503/tautulli-exporter:latest@sha256:cd6716e39f5095624337bc4cce9036f2c478575e6ccafe3e1576a3168ba4c83e AS binary
-FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
+FROM ghcr.io/mm503/tautulli-exporter:latest@sha256:cd6716e39f5095624337bc4cce9036f2c478575e6ccafe3e1576a3168ba4c83e AS tautulli-binary
+FROM druggeri/nut_exporter:2.5.2@sha256:c5d6835ce340f861d257d52af7151c531125ebe0e208a823e8ec7ad9355671c9 AS nut-binary
+
+FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS base
 RUN apk add --no-cache ca-certificates
-COPY --from=binary /app/tautulli-exporter /app/tautulli-exporter
+
+FROM base AS tautulli-exporter
+COPY --from=tautulli-binary /app/tautulli-exporter /app/tautulli-exporter
 ENTRYPOINT ["/docker-entrypoint.sh", "/app/tautulli-exporter"]
+
+FROM base AS nut-exporter
+COPY --from=nut-binary /nut_exporter /nut_exporter
+ENTRYPOINT ["/docker-entrypoint.sh", "/nut_exporter"]

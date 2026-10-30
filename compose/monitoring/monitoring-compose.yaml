@@ -11,6 +11,10 @@
 secrets:
   tautulli_api_key:
     file: ${SECRETS_DIR}/tautulli_api_key
+  nut_exporter_username:
+    file: ${SECRETS_DIR}/nut_exporter_username
+  nut_exporter_password:
+    file: ${SECRETS_DIR}/nut_exporter_password
 
 volumes:
   prometheus_data:
@@ -97,6 +101,7 @@ services:
     build:
       context: ${DOCUMENTS_DIR}
       dockerfile: ${COMPOSE_DIR}/monitoring/Dockerfile
+      target: tautulli-exporter
     image: tautulli-exporter:local
     container_name: tautulli-exporter
     restart: unless-stopped
@@ -127,6 +132,28 @@ services:
     networks:
       webapps:
         ipv4_address: 172.19.0.39
+    security_opt:
+      - no-new-privileges:true
+
+  nut-exporter:
+    build:
+      context: ${DOCUMENTS_DIR}
+      dockerfile: ${COMPOSE_DIR}/monitoring/Dockerfile
+      target: nut-exporter
+    image: nut-exporter:local
+    container_name: nut-exporter
+    restart: unless-stopped
+    command:
+      - '--nut.server=10.144.88.35'
+      - '--nut.vars_enable=battery.charge,battery.charge.low,battery.runtime,battery.runtime.low,battery.voltage,battery.voltage.nominal,input.voltage,input.voltage.nominal,ups.load,ups.realpower.nominal,ups.status'
+    volumes:
+      - ${SCRIPTS_DIR}/set_secret_vars.sh:/docker-entrypoint.sh:ro
+    secrets:
+      - nut_exporter_username
+      - nut_exporter_password
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.41
     security_opt:
       - no-new-privileges:true
 

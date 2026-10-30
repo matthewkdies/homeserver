@@ -1,0 +1,47 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: ups-power-alerts
+    folder: Homelab Alerts
+    interval: 10s
+    rules:
+      - uid: ups_on_battery
+        title: UPS On Battery Power
+        condition: C
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 60
+              to: 0
+            datasourceUid: PBFA97CFB590B2093
+            model:
+              expr: network_ups_tools_ups_status{flag="OB"}
+              instant: true
+              refId: A
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.5]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [A]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: A
+              refId: C
+              type: threshold
+        for: 20s
+        annotations:
+          summary: "Homelab UPS is running on battery power (OB)!"
+          description: "Utility AC power was lost. Homelab is running on APC Back-UPS 600VA battery."
+        labels:
+          severity: warning
