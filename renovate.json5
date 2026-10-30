@@ -126,5 +126,6 @@
       "labels": ["dependencies", "needs-review"]
     }
   ],
-  "prConcurrentLimit": 20
+  "prConcurrentLimit": 20,
+  "prHourlyLimit": 0
 }
