@@ -51,7 +51,7 @@ steam)
 	"${SCRIPT_DIR}/start_steam.sh"
 	;;
 cfbr | ncaa)
-	"${SCRIPT_DIR}/start_cfbr.sh"
+	"/home/matthewkdies/Desktop/rpcs3/start_cfbr.sh"
 	;;
 update)
 	"${SCRIPT_DIR}/update_sunshine.sh"
