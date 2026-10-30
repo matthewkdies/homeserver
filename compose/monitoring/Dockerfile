@@ -1,5 +1,5 @@
 FROM ghcr.io/mm503/tautulli-exporter:latest@sha256:08fb9402c2f313e5cb99cf3b517471f7cb3fd23552067db5f0fadbcf26acb0d8 AS tautulli-binary
-FROM druggeri/nut_exporter:2.5.3@sha256:29968a349f1573bba0b853da4cde07cd05e3232f3d513371e9fc6344b54c86d1 AS nut-binary
+FROM druggeri/nut_exporter:3.3.0@sha256:276460d141c732772f8b1fcd785a7de272473e6d39fd85c32b163efc2999cb9a AS nut-binary
 
 FROM alpine:3.24@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a AS base
 RUN apk add --no-cache ca-certificates
