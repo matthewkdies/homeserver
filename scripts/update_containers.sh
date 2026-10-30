@@ -77,8 +77,8 @@ COMMITS_LOG=$(git log --pretty=format:"• %s" "${LOCAL_MAIN}..${REMOTE_MAIN}")
 RECREATED_CONTAINERS=""
 FAILED_STACKS=""
 
-# Stacks that should not be auto-deployed on this host (e.g. remote servers, NAS, etc.)
-EXCLUDED_STACKS=("pihole")
+# Stacks that should not be auto-deployed on this host (e.g. remote servers, NAS, one-shot runners, etc.)
+EXCLUDED_STACKS=("pihole" "renovate")
 
 is_stack_excluded() {
 	local target="$1"
@@ -139,7 +139,7 @@ elif [ -n "${RECREATED_CONTAINERS}" ]; then
 	curl -s \
 		-H "Authorization: Bearer ${NTFY_TOKEN}" \
 		-H "Title: Containers Updated" \
-		-H "Priority: low" \
+		-H "Priority: default" \
 		-H "Tags: whale,package" \
 		-d "$(echo -e "${report_msg}")" \
 		"${NTFY_URL}" || true

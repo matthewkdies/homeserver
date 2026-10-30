@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - A script [`weekly_ha_suggestions.sh`](./scripts/weekly_ha_suggestions.sh) to use `agy` to generate a list of suggestions for Home Assistant.
 
+### Fixed
+
+- Excluded Renovate from the container updating logic, and setting the priority to default so I get the message.
+
 ## [2.0.0] - 2026/10/18
 
 ### Added
