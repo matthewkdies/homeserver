@@ -15,6 +15,9 @@ services:
     image: ghcr.io/hargata/lubelogger:v1.7.4@sha256:483a9d7582c4e6258615fd822b3de4193b4fcc4230d0a92432c6d407faf75af2
     container_name: lubelogger
     hostname: lubelogger
+    depends_on:
+      postgres:
+        condition: service_healthy
     entrypoint: [ "/docker-entrypoint.sh" ]
     command: [ "./CarCareTracker" ]
     volumes:
@@ -38,6 +41,15 @@ services:
     hostname: lubelogger-postgres
     security_opt:
       - no-new-privileges:true
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$(cat /run/secrets/postgres_user) -d lubelogger",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     volumes:
       - lubelogger_pg_data:/var/lib/postgresql/data
       - /etc/localtime:/etc/localtime:ro
