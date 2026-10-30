@@ -58,7 +58,7 @@ services:
         ipv4_address: 172.19.0.35
 
   nvidia-gpu-exporter:
-    image: utkuozdemir/nvidia_gpu_exporter:1.15.1@sha256:7aee2d42836ad29d4adb2722b7cfdc806ec9cc8d45fd0b8971ebbad2d9f3d087
+    image: utkuozdemir/nvidia_gpu_exporter:1.16.0@sha256:cec17e3ddfce7baefbdf116d1a259e208bb1519e4e0b18b7b0879bde0fcad5a2
     container_name: nvidia-gpu-exporter
     restart: unless-stopped
     pid: host
@@ -76,7 +76,7 @@ services:
         ipv4_address: 172.19.0.36
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.51.0@sha256:771a65c7877817cd9bb4c2d9eecb9fd1ac56f370287617658c51a35061efa71a
+    image: gcr.io/cadvisor/cadvisor:v0.55.1@sha256:3de2bd5203120b866d74a9b283b2ffb8ec382fbf9dc321814700c6ea6f44ec57
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
@@ -158,7 +158,7 @@ services:
       - no-new-privileges:true
 
   grafana:
-    image: grafana/grafana:11.2.10-security-01@sha256:4ccffa04ef20f8b32aa8732a8c4dfc5a43b61004dba67dbe91063cd71284ff9f
+    image: grafana/grafana:11.6.16@sha256:d67af92050b8d93b393dc741864752a69c9da1ffa39c1bb9af49ad5d9e47d2c3
     container_name: grafana
     restart: unless-stopped
     environment:
