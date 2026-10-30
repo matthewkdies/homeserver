@@ -39,7 +39,7 @@ services:
     restart: unless-stopped
 
   football-pool-db:
-    image: postgres:17@sha256:31ba9c94a03ada9988f2bb493a22a75eef3a185884533e5cdbcd498ea835b08f
+    image: postgres:18@sha256:979bccfde35445db618c65107d27d08c6c21339d8dc3ad4c830c6633947be0e4
     container_name: football-pool-postgres
     hostname: football-pool-postgres
     mem_limit: 1g
