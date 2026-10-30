@@ -170,7 +170,7 @@ services:
 
   # torrent client monitoring + management
   prowlarr:
-    image: linuxserver/prowlarr:2.6.5.5623-ls165@sha256:b3b00047ed20f6ce2b16780145cb6a0acb51c9e28ea6aa6f5dcd33c7034f1797
+    image: linuxserver/prowlarr:2.7.0.5723-ls166@sha256:04be30163fbaf48d6aeee7b5893c9f6614ffbad6d853971df0d6dcdf01c7f104
     container_name: prowlarr
     hostname: prowlarr
     environment:
@@ -378,7 +378,7 @@ services:
 
   # torrenting client
   qbittorrent:
-    image: linuxserver/qbittorrent:5.2.4_v2.0.15-ls480@sha256:97333cc1ccf903e0bbcd8eb67e3332e4970e9c1ecabe145e499e9c0847ebcaed
+    image: linuxserver/qbittorrent:5.3.0_v2.1.2-ls485@sha256:75ecbb1c89ab7b0a21c4bde40b4820e4f1649d2d56d83b91913422155e8d2a5f
     container_name: qbittorrent
     environment:
       PUID: 142
@@ -408,7 +408,7 @@ services:
 
   # connects to the soulseek network to download royalty-free music
   soulseek:
-    image: slskd/slskd:0.26.1@sha256:588af49abc3088d639c8f1174d3bfad6e92c093a275a593140e3ac9311ebf6c4
+    image: slskd/slskd:0.26.2@sha256:d0963a3e5b16facd295bf4f2156dad0182f246b1b21a032cae12f5494c694843
     container_name: soulseek
     hostname: soulseek
     expose:

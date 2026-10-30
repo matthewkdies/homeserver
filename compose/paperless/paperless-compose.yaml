@@ -14,7 +14,7 @@ secrets:
 
 services:
   paperless:
-    image: ghcr.io/paperless-ngx/paperless-ngx:2.14.7@sha256:2a6d9f6461ad7e8335f5b2123a173b9e6002fda209af8a66483b0c00629569ab
+    image: ghcr.io/paperless-ngx/paperless-ngx:3.4.0@sha256:7c1d98afd200def9e2bad3a377d30829e8d486554b3c818995af5860114ea17f
     container_name: paperless
     hostname: paperless
     depends_on:
