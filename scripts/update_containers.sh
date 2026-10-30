@@ -102,7 +102,7 @@ for compose_file in "${COMPOSE_DIR}"/*/*compose.y*ml; do
 
 	log_to_file "Checking stack: ${stack_name}..." "${LOG_FILE}"
 
-	if ! output=$(docker compose -f "${compose_file}" up -d --remove-orphans 2>&1); then
+	if ! output=$(docker compose -f "${compose_file}" up -d --build --remove-orphans 2>&1); then
 		log_to_file "ERROR updating stack ${stack_name}: ${output}" "${LOG_FILE}"
 		FAILED_STACKS="${FAILED_STACKS}\n• ${stack_name}"
 		continue
