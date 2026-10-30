@@ -102,7 +102,15 @@ for compose_file in "${COMPOSE_DIR}"/*/*compose.y*ml; do
 
 	log_to_file "Checking stack: ${stack_name}..." "${LOG_FILE}"
 
-	if ! output=$(docker compose -f "${compose_file}" up -d --build --remove-orphans 2>&1); then
+	# Only update services that are currently running to avoid starting stopped containers
+	mapfile -t target_services < <(docker compose -f "${compose_file}" ps --status running --services 2>/dev/null | grep -v '^$' || true)
+
+	if [ ${#target_services[@]} -eq 0 ]; then
+		log_to_file "Skipping stack: ${stack_name} (no running containers)" "${LOG_FILE}"
+		continue
+	fi
+
+	if ! output=$(docker compose -f "${compose_file}" up -d --build --remove-orphans "${target_services[@]}" 2>&1); then
 		log_to_file "ERROR updating stack ${stack_name}: ${output}" "${LOG_FILE}"
 		FAILED_STACKS="${FAILED_STACKS}\n• ${stack_name}"
 		continue
