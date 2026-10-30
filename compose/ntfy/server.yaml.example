@@ -2,6 +2,7 @@
 base-url: "https://ntfy.<yourdomain>.com"
 behind-proxy: true
 listen-http: ":8255"
+cache-duration: "168h"
 
 # Database
 database-url: "postgres://<dbuser>:<dbpassword>@ntfy-postgres:5432/ntfy"
