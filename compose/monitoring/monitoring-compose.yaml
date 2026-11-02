@@ -58,7 +58,7 @@ services:
         ipv4_address: 172.19.0.35
 
   nvidia-gpu-exporter:
-    image: utkuozdemir/nvidia_gpu_exporter:1.16.0@sha256:cec17e3ddfce7baefbdf116d1a259e208bb1519e4e0b18b7b0879bde0fcad5a2
+    image: utkuozdemir/nvidia_gpu_exporter:1.17.0@sha256:b085013de2828d7045c80f6af3db030b69fd81c14a43384c77652f74ad87971c
     container_name: nvidia-gpu-exporter
     restart: unless-stopped
     pid: host
