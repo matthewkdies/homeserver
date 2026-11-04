@@ -10,7 +10,7 @@ secrets:
 
 services:
   renovate:
-    image: renovate/renovate:44.206.2@sha256:d515a99f5d14d1c62b792ee61339d165dd9d20ee82ca9d5379daf639050bab51
+    image: renovate/renovate:44.211.0@sha256:43725f6de17255edab0d7c448b150d91b6165a35cecaa78444543d418d0bd3d5
     user: "12021:144"
     volumes:
       - ${COMPOSE_DIR}/renovate/config.js:/usr/src/app/config.js:ro
