@@ -32,7 +32,7 @@ PROMPT="Weekly Home Assistant Suggestion Task:
    b) Create/update a persistent notification inside Home Assistant using ha_call_service(domain='persistent_notification', service='create', data={'notification_id': 'weekly_ha_suggestions', 'title': '🏠 Weekly HA Suggestions', 'message': '<full_markdown>'}).
 5. Send a concise summary push notification to Matt's iPhone using ha_call_service with domain='notify', service='mobile_app_matts_phone', and data={'title': '🏠 Weekly HA Suggestions', 'message': '<concise_summary>\n(Tap to view full details in Home Assistant)', 'data': {'url': '/server-rack/overview', 'actions': [{'action': 'URI', 'title': 'View Full Digest', 'uri': '/server-rack/overview'}]}}."
 
-if output=$("${AGY_BIN}" --project "home-assistant" --dangerously-skip-permissions -p "${PROMPT}" 2>&1); then
+if output=$(DBUS_SESSION_BUS_ADDRESS="unix:path=/dev/null" "${AGY_BIN}" --project "home-assistant" --dangerously-skip-permissions -p "${PROMPT}" 2>&1); then
 	log_to_file "Weekly HA suggestions completed successfully." "${LOG_FILE}"
 	log_to_file "${output}" "${LOG_FILE}"
 else
