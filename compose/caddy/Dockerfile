@@ -2,7 +2,7 @@
 # For more information, see "Adding custom Caddy modules" on the below:
 # https://hub.docker.com/_/caddy
 
-FROM caddy:2-builder-alpine@sha256:2252cf8c0a1474735a9ce57204aa71be28601298204e3ad727681c1eb159be98 AS builder
+FROM caddy:2-builder-alpine@sha256:3dbe908afe8ecb4f5505a80153c8de0fecd1b14d560798a6955c5cf115951561 AS builder
 
 RUN <<EOF
 xcaddy build \
