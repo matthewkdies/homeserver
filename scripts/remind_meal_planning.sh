@@ -17,7 +17,13 @@ fi
 
 LOG_FILE="${DOCKER_DIR}/log/remind_meal_planning.log"
 NTFY_BASE_URL="${NTFY_URL:-https://ntfy.mattdies.com}"
-NTFY_TOPIC="${NTFY_MEALIE_TOPIC:-mealie-planning-gMDA5jqL2RDBBhjf}"
+
+if [ -z "${NTFY_MEALIE_TOPIC:-}" ]; then
+	echo "ERROR: NTFY_MEALIE_TOPIC environment variable is not set. Please set it in ~/.envvars." >&2
+	exit 1
+fi
+
+NTFY_TOPIC="${NTFY_MEALIE_TOPIC}"
 NTFY_FULL_URL="${NTFY_BASE_URL}/${NTFY_TOPIC}"
 MEALIE_PLANNER_URL="${MEALIE_URL:-https://mealie.mattdies.com}/household/mealplan/planner/view"
 
@@ -27,7 +33,7 @@ if [ "${1:-}" = "--test" ]; then
 fi
 
 if [ -n "${LOG_FILE:-}" ] && [ -d "$(dirname "${LOG_FILE}")" ]; then
-	log_to_file "Sending weekly meal planning reminder to Ntfy (${NTFY_TOPIC})..." "${LOG_FILE}"
+	log_to_file "Sending weekly meal planning reminder to Ntfy..." "${LOG_FILE}"
 fi
 
 title="Weekly Meal Planning Reminder"
@@ -56,7 +62,7 @@ http_code=$(echo "${response}" | tail -n1)
 body=$(echo "${response}" | sed '$d')
 
 if [ "${http_code}" -ge 200 ] && [ "${http_code}" -lt 300 ]; then
-	echo "Successfully sent meal planning reminder to Ntfy topic: ${NTFY_TOPIC}"
+	echo "Successfully sent meal planning reminder to Ntfy."
 	if [ -n "${LOG_FILE:-}" ] && [ -d "$(dirname "${LOG_FILE}")" ]; then
 		log_to_file "Notification successfully delivered (HTTP ${http_code})." "${LOG_FILE}"
 		clean_log_file "${LOG_FILE}" 500
