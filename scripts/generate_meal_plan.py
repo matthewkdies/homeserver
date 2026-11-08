@@ -184,14 +184,25 @@ class MealieClient:
             data = resp.json()
 
             items = data.get("items", [])
+            if not items:
+                break
             recipes.extend(items)
 
-            total_pages = data.get("totalPages", 1)
-            if page >= total_pages or not items:
+            total_pages = data.get("total_pages", data.get("totalPages", 1))
+            if page >= total_pages or len(items) < per_page:
                 break
             page += 1
 
         return recipes
+
+    def get_recent_mealplans(self, limit: int = 150) -> list[dict[str, Any]]:
+        """Queries recent meal plan entries from Mealie to determine recipe recency."""
+        url = f"{self.base_url}/api/households/mealplans"
+        params = {"perPage": limit, "orderBy": "date", "orderDirection": "desc"}
+        resp = self.session.get(url, headers=self.headers, params=params, timeout=self.timeout)
+        resp.raise_for_status()
+        data = resp.json()
+        return data.get("items", [])
 
     def get_existing_mealplans(self, start_date: str, end_date: str) -> list[dict[str, Any]]:
         """Queries existing meal plan entries within date range."""
@@ -227,6 +238,57 @@ class PlanResponse(BaseModel):
     summary_of_week: str = Field(description="Brief weekly theme and nutritional overview")
 
 
+def get_recipe_last_made_map(mealplan_items: list[dict[str, Any]]) -> dict[str, str]:
+    """Returns a dict mapping recipe_id -> most recent date (YYYY-MM-DD) it was planned/made."""
+    last_made: dict[str, str] = {}
+    for entry in mealplan_items:
+        rid = entry.get("recipeId")
+        dt = entry.get("date")
+        if rid and dt and rid not in last_made:
+            last_made[rid] = dt
+    return last_made
+
+
+def format_recipe_time(r: dict[str, Any]) -> str | None:
+    """Formats recipe duration from string description or totalTimeSeconds."""
+    if r.get("totalTime"):
+        return str(r["totalTime"]).strip()
+    secs = r.get("totalTimeSeconds")
+    if not secs:
+        prep = r.get("prepTimeSeconds") or 0
+        perf = r.get("performTimeSeconds") or 0
+        if prep + perf > 0:
+            secs = prep + perf
+    if secs and secs > 0:
+        hrs = secs // 3600
+        mins = (secs % 3600) // 60
+        if hrs > 0 and mins > 0:
+            return f"{hrs} hr {mins} min"
+        elif hrs > 0:
+            return f"{hrs} hr"
+        elif mins > 0:
+            return f"{mins} min"
+        else:
+            return f"{secs} sec"
+    return None
+
+
+NON_DINNER_CATEGORIES = {"dessert", "cocktails", "drinks", "homemade essentials", "snack"}
+
+
+def is_dinner_eligible(recipe: dict[str, Any], goals: str = "") -> bool:
+    """Checks if a recipe is eligible as a dinner dish unless user goals request dessert/snack/etc."""
+    goals_lower = goals.lower()
+    categories = [
+        (c.get("name") if isinstance(c, dict) else str(c)).lower() for c in (recipe.get("recipeCategory") or [])
+    ]
+    for cat in categories:
+        if cat in NON_DINNER_CATEGORIES:
+            if cat not in goals_lower:
+                return False
+    return True
+
+
 def validate_gemini_selection(
     selections: list[dict[str, Any]], catalog: dict[str, dict[str, Any]]
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -248,27 +310,36 @@ def generate_plan_with_gemini(
     cook_dates: list[datetime.date],
     goals: str,
     skip_map: dict[str, str],
+    last_made_map: dict[str, str] | None = None,
 ) -> PlanResponse:
     """Calls Gemini API using structured JSON output to assign recipes to cook dates."""
     if not genai:
         raise RuntimeError("google-genai package is not installed. Run with 'uv run --with google-genai'.")
 
     client = genai.Client(api_key=api_key)
+    last_made_map = last_made_map or {}
 
     # Prepare compact catalog representation to fit token budgets efficiently
     compact_catalog = []
     for r in recipe_catalog:
+        if not is_dinner_eligible(r, goals):
+            continue
+
+        rid = r.get("id")
+        last_made = last_made_map.get(rid) or r.get("lastMade")
+        formatted_time = format_recipe_time(r)
+
         compact_catalog.append(
             {
-                "id": r.get("id"),
+                "id": rid,
                 "name": r.get("name"),
                 "tags": [t.get("name") if isinstance(t, dict) else str(t) for t in (r.get("tags") or [])],
                 "categories": [
                     c.get("name") if isinstance(c, dict) else str(c) for c in (r.get("recipeCategory") or [])
                 ],
                 "rating": r.get("rating"),
-                "total_time": r.get("totalTime"),
-                "last_made": r.get("lastMade"),
+                "total_time": formatted_time,
+                "last_made": last_made,
                 "date_added": r.get("dateAdded"),
                 "description": (r.get("description") or "")[:150],
             }
@@ -281,7 +352,7 @@ def generate_plan_with_gemini(
         "season": season,
         "season_notes": season_notes,
         "user_goals": goals,
-        "dates_needing_dinners": [d.isoformat() for d in cook_dates],
+        "dates_needing_dinners": [{"date": d.isoformat(), "day_of_week": d.strftime("%A")} for d in cook_dates],
         "excluded_dates_with_notes": {d: reason for d, reason in skip_map.items()},
         "available_recipe_catalog_count": len(compact_catalog),
         "recipe_catalog": compact_catalog,
@@ -292,10 +363,11 @@ def generate_plan_with_gemini(
         "Strict Requirements:\n"
         "1. ONLY assign meals for the dates listed in 'dates_needing_dinners'. DO NOT assign meals for excluded dates.\n"
         "2. You MUST select recipes exclusively from the provided 'recipe_catalog'. Every recipe_id and recipe_name MUST match exactly.\n"
-        "3. Prioritize user goals (e.g. high protein, high fiber, comfort food, quick prep).\n"
-        "4. If 'new recipes' or variety is mentioned, prioritize recipes with 'last_made' = null (untried recipes) or oldest 'last_made'.\n"
-        "5. Respect seasonality and balance proteins/styles across the week (e.g. avoid scheduling heavy chicken or pasta dishes on 3 consecutive days).\n"
-        "6. Return the plan conforming strictly to the requested JSON schema."
+        "3. Prioritize user goals (e.g. high protein, high fiber, comfort food, quick prep, new/untried recipes).\n"
+        "4. Variety & Recency: If 'new recipes', 'untried recipes', or 'variety' is requested, strictly prioritize recipes with 'last_made' = null (untried recipes) or oldest 'last_made'. DO NOT select recipes that were made within the last 30 days unless requested.\n"
+        "5. Day of week context: Take into account the day of the week (e.g. recommend quicker or simpler meals for busy weeknights, and more elaborate or slow-cooking dishes on weekends).\n"
+        "6. Balance styles and proteins across the week (e.g. avoid scheduling heavy chicken or pasta dishes on 3 consecutive days).\n"
+        "7. Return the plan conforming strictly to the requested JSON schema."
     )
 
     model_name = os.environ.get("GEMINI_MODEL", "gemini-3.5-flash-lite")
@@ -503,6 +575,19 @@ def main():
         sys.exit(1)
 
     print(f"[+] Found {len(catalog)} recipes in Mealie.")
+
+    # Fetch recent meal plan history to track when recipes were last made
+    print("[+] Fetching meal plan history to determine recipe recency...")
+    last_made_map: dict[str, str] = {}
+    try:
+        recent_entries = mealie.get_recent_mealplans(limit=150)
+        last_made_map = get_recipe_last_made_map(recent_entries)
+        print(f"[+] Loaded recency history for {len(last_made_map)} recipes.")
+    except Exception as exc:
+        print(
+            f"[!] Warning: Could not fetch meal plan history ({exc}); proceeding without recency data.", file=sys.stderr
+        )
+
     catalog_map = {r["id"]: r for r in catalog if r.get("id")}
 
     # Gemini Selection Loop (with re-roll support)
@@ -516,6 +601,7 @@ def main():
                 cook_dates=cook_dates,
                 goals=goals,
                 skip_map=skip_map,
+                last_made_map=last_made_map,
             )
         except Exception as exc:
             print(f"[!] Gemini generation failed: {exc}", file=sys.stderr)
