@@ -482,7 +482,7 @@ services:
 
   # monitoring dashboard
   tautulli:
-    image: linuxserver/tautulli:v2.18.2-ls247@sha256:d3c53deb09f6b8fffd1476c7154da538394193955d1e909f3b126068102fb7cf
+    image: linuxserver/tautulli:v2.19.1-ls252@sha256:5e8f80cc18f03c606a3567c8a9b37d80812ed8017d2e2f8ff2e2a91b54a3aef1
     container_name: tautulli
     hostname: tautulli
     environment:
