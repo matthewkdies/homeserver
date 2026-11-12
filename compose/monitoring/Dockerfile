@@ -1,4 +1,4 @@
-FROM ghcr.io/mm503/tautulli-exporter:latest@sha256:08fb9402c2f313e5cb99cf3b517471f7cb3fd23552067db5f0fadbcf26acb0d8 AS tautulli-binary
+FROM ghcr.io/mm503/tautulli-exporter:latest@sha256:b3c9a3976cc30c42f9217c1bdef2819e43defa2bf36eee85b50fd7bc5aa8a89d AS tautulli-binary
 FROM druggeri/nut_exporter:3.3.0@sha256:276460d141c732772f8b1fcd785a7de272473e6d39fd85c32b163efc2999cb9a AS nut-binary
 
 FROM alpine:3.24@sha256:f59abe656b692d901e184be3445e084786602108599d2a51d229c0f5a48c71bf AS base
