@@ -580,7 +580,7 @@ services:
 
   # video game library manager and download automation
   questarr:
-    image: ghcr.io/doezer/questarr:latest
+    image: ghcr.io/doezer/questarr:latest@sha256:495a1648f1ad8dddd4c7f96b4bf817d9d061bfd5608ef520522f0d891415e972
     container_name: questarr
     hostname: questarr
     environment:
