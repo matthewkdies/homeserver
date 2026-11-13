@@ -20,6 +20,7 @@
 #   10. Connection between Lidarr's wanted list and Soulseek container (soularr)
 #   11. Automatic creation of Plex music playlists based on listening habit (meloday)
 #   12. Deletion of content based on configurable rules (maintainerr)
+#   13. Video game tracking, library management, and download automation (questarr)
 #
 # Unfortunately, I haven't been great at keeping helpful links as I go so far.
 # Those that I remember off the top of my head are listed below:
@@ -575,6 +576,30 @@ services:
       - sonarr
       - radarr
       - radarr4k
+    restart: unless-stopped
+
+  # video game library manager and download automation
+  questarr:
+    image: ghcr.io/doezer/questarr:latest
+    container_name: questarr
+    hostname: questarr
+    environment:
+      PUID: 158
+      PGID: 65536
+      TZ: America/New_York
+      SQLITE_DB_PATH: /app/data/sqlite.db
+    volumes:
+      - ${DATA_DIR}:/data
+      - ${DATA2_DIR}:/data2
+      - ${DATA3_DIR}:/data3
+      - ${DOCKER_DIR}/questarr:/app/data
+    expose:
+      - 5000
+    networks:
+      webapps:
+        ipv4_address: 172.19.0.42
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
 
     # # generates summaries, like a certain music streaming service every year
