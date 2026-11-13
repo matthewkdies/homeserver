@@ -3,7 +3,8 @@ set -euo pipefail
 
 # --------------------------------------------------------------------------
 # Pulls latest changes from main, updates running Docker Compose containers,
-# and sends a report of image upgrades to Ntfy.
+# triggers Renovate to refresh the Dependency Dashboard, and sends a report
+# of image upgrades to Ntfy.
 # On Saturdays, checks the Renovate Dependency Dashboard / open PRs and
 # sends a separate notification if any container upgrades need review.
 # Runs daily at 5:00 AM via cron (after Renovate runs at 4:00 AM).
@@ -253,7 +254,13 @@ else
 		"${NTFY_URL}" || true
 fi
 
-# 6. Saturday reminder: check Dependency Dashboard for upgrades needing review
+# 6. Reconcile merged PRs and refresh Dependency Dashboard
+log_to_file "Triggering Renovate to refresh Dependency Dashboard..." "${LOG_FILE}"
+if ! systemctl --user start renovate.service; then
+	log_to_file "WARNING: Failed to run renovate.service" "${LOG_FILE}"
+fi
+
+# 7. Saturday reminder: check Dependency Dashboard for upgrades needing review
 check_saturday_dependency_dashboard
 
 log_to_file "Container update process finished successfully." "${LOG_FILE}"
