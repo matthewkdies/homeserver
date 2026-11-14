@@ -1,131 +1,192 @@
 {
-  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    "docker:pinDigests"
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    'docker:pinDigests',
   ],
-  "dependencyDashboard": true,
-  "timezone": "America/New_York",
-  "pinDigests": true,
-  "minimumReleaseAgeBehaviour": "timestamp-optional",
-  "internalChecksFilter": "flexible",
-  "docker-compose": {
-    "managerFilePatterns": [
-      "/(^|/)[^/]+-compose\\.ya?ml$/",
-      "/(^|/)(?:docker-)?compose[^/]*\\.ya?ml$/"
-    ]
+  dependencyDashboard: {
+    enabled: true,
   },
-  "packageRules": [
+  timezone: 'America/New_York',
+  pinDigests: true,
+  minimumReleaseAgeBehaviour: 'timestamp-optional',
+  internalChecksFilter: 'flexible',
+  'docker-compose': {
+    managerFilePatterns: [
+      '/(^|/)[^/]+-compose\\.ya?ml$/',
+      '/(^|/)(?:docker-)?compose[^/]*\\.ya?ml$/',
+    ],
+  },
+  packageRules: [
     {
-      "description": "Calendar Versioning for Pi-hole and Home Assistant",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "pihole/pihole",
-        "homeassistant/home-assistant",
-        "ghcr.io/home-assistant/home-assistant"
+      description: 'Calendar Versioning for Pi-hole and Home Assistant',
+      matchDatasources: [
+        'docker',
       ],
-      "versioning": "regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d+)(?:-(?<compatibility>.+))?$",
-      "separateMajorMinor": false
-    },
-    {
-      "description": "Keep MySQL on LTS release track",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["mysql"],
-      "allowedVersions": "<9.0.0"
-    },
-    {
-      "description": "Custom versioning for LinuxServer.io containers",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "/^linuxserver\\/.+/",
-        "/^lscr\\.io\\/linuxserver\\/.+/",
-        "/^ghcr\\.io\\/linuxserver\\/.+/"
+      matchPackageNames: [
+        'pihole/pihole',
+        'homeassistant/home-assistant',
+        'ghcr.io/home-assistant/home-assistant',
       ],
-      "versioning": "regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:[._-](?<build>[a-zA-Z0-9._-]+))?-ls(?<revision>\\d+)$"
+      versioning: 'regex:^(?<major>\\d{4})\\.(?<minor>\\d{1,2})\\.(?<patch>\\d+)(?:-(?<compatibility>.+))?$',
+      separateMajorMinor: false,
     },
     {
-      "description": "Block legacy LinuxServer.io qBittorrent 14.x tags from triggering major upgrades",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["linuxserver/qbittorrent", "lscr.io/linuxserver/qbittorrent", "ghcr.io/linuxserver/qbittorrent"],
-      "allowedVersions": "<10.0.0"
-    },
-    {
-      "description": "24-hour stability window for minor feature updates",
-      "matchUpdateTypes": ["minor"],
-      "minimumReleaseAge": "24 hours"
-    },
-    {
-      "description": "3-day stability window for major version upgrades",
-      "matchUpdateTypes": ["major"],
-      "minimumReleaseAge": "3 days"
-    },
-    {
-      "description": "Immediate release for patch, digest, and pin updates",
-      "matchUpdateTypes": ["patch", "pin", "digest", "pinDigest"],
-      "minimumReleaseAge": null
-    },
-    {
-      "description": "Exempt Renovate runner from minor stability delay due to multiple daily releases",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": ["renovate/renovate"],
-      "minimumReleaseAge": null
-    },
-    {
-      "description": "Auto-merge safe non-major updates (patch/minor/digest) for stable, non-database packages",
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest", "pinDigest"],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true,
-      "labels": ["dependencies", "automerge"]
-    },
-    {
-      "description": "Never auto-merge major version upgrades",
-      "matchUpdateTypes": ["major"],
-      "automerge": false,
-      "commitMessagePrefix": "chore(deps)!: ",
-      "labels": ["dependencies", "major-update", "needs-review"],
-      "prBodyNotes": [
-        "⚠️ **Major version upgrade**: Please review upstream breaking changes and migration guides before merging."
-      ]
-    },
-    {
-      "description": "Never auto-merge pre-1.0.0 (0.x) packages where minor or patch bumps can contain breaking changes",
-      "matchCurrentVersion": "/^0\\./",
-      "automerge": false,
-      "labels": ["dependencies", "needs-review"]
-    },
-    {
-      "description": "Never auto-merge Home Assistant because monthly releases contain breaking changes",
-      "matchPackageNames": [
-        "homeassistant/home-assistant",
-        "ghcr.io/home-assistant/home-assistant"
+      description: 'Keep MySQL on LTS release track',
+      matchDatasources: [
+        'docker',
       ],
-      "automerge": false,
-      "labels": ["dependencies", "needs-review"]
-    },
-    {
-      "description": "Never auto-merge database engines to prevent unexpected migrations or data breakage",
-      "matchDatasources": ["docker"],
-      "matchPackageNames": [
-        "postgres",
-        "**/postgres",
-        "mysql",
-        "mariadb",
-        "redis",
-        "valkey/valkey",
-        "docker.io/valkey/valkey"
+      matchPackageNames: [
+        'mysql',
       ],
-      "automerge": false,
-      "labels": ["dependencies", "database", "needs-review"]
+      allowedVersions: '<9.0.0',
     },
     {
-      "description": "Never auto-merge images tracking 'latest', where upstream major releases arrive as digest updates",
-      "matchDatasources": ["docker"],
-      "matchCurrentValue": "latest",
-      "automerge": false,
-      "labels": ["dependencies", "needs-review"]
-    }
+      description: 'Custom versioning for LinuxServer.io containers',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        '/^linuxserver\\/.+/',
+        '/^lscr\\.io\\/linuxserver\\/.+/',
+        '/^ghcr\\.io\\/linuxserver\\/.+/',
+      ],
+      versioning: 'regex:^v?(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:[._-](?<build>[a-zA-Z0-9._-]+))?-ls(?<revision>\\d+)$',
+    },
+    {
+      description: 'Block legacy LinuxServer.io qBittorrent 14.x tags from triggering major upgrades',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'linuxserver/qbittorrent',
+        'lscr.io/linuxserver/qbittorrent',
+        'ghcr.io/linuxserver/qbittorrent',
+      ],
+      allowedVersions: '<10.0.0',
+    },
+    {
+      description: '24-hour stability window for minor feature updates',
+      matchUpdateTypes: [
+        'minor',
+      ],
+      minimumReleaseAge: '24 hours',
+    },
+    {
+      description: '3-day stability window for major version upgrades',
+      matchUpdateTypes: [
+        'major',
+      ],
+      minimumReleaseAge: '3 days',
+    },
+    {
+      description: 'Immediate release for patch, digest, and pin updates',
+      matchUpdateTypes: [
+        'patch',
+        'pin',
+        'digest',
+        'pinDigest',
+      ],
+      minimumReleaseAge: null,
+    },
+    {
+      description: 'Exempt Renovate runner from minor stability delay due to multiple daily releases',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'renovate/renovate',
+      ],
+      minimumReleaseAge: null,
+    },
+    {
+      description: 'Auto-merge safe non-major updates (patch/minor/digest) for stable, non-database packages',
+      matchUpdateTypes: [
+        'minor',
+        'patch',
+        'pin',
+        'digest',
+        'pinDigest',
+      ],
+      automerge: true,
+      automergeType: 'pr',
+      platformAutomerge: true,
+      labels: [
+        'dependencies',
+        'automerge',
+      ],
+    },
+    {
+      description: 'Never auto-merge major version upgrades',
+      matchUpdateTypes: [
+        'major',
+      ],
+      automerge: false,
+      commitMessagePrefix: 'chore(deps)!: ',
+      labels: [
+        'dependencies',
+        'major-update',
+        'needs-review',
+      ],
+      prBodyNotes: [
+        '⚠️ **Major version upgrade**: Please review upstream breaking changes and migration guides before merging.',
+      ],
+    },
+    {
+      description: 'Never auto-merge pre-1.0.0 (0.x) packages where minor or patch bumps can contain breaking changes',
+      matchCurrentVersion: '/^0\\./',
+      automerge: false,
+      labels: [
+        'dependencies',
+        'needs-review',
+      ],
+    },
+    {
+      description: 'Never auto-merge Home Assistant because monthly releases contain breaking changes',
+      matchPackageNames: [
+        'homeassistant/home-assistant',
+        'ghcr.io/home-assistant/home-assistant',
+      ],
+      automerge: false,
+      labels: [
+        'dependencies',
+        'needs-review',
+      ],
+    },
+    {
+      description: 'Never auto-merge database engines to prevent unexpected migrations or data breakage',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'postgres',
+        '**/postgres',
+        'mysql',
+        'mariadb',
+        'redis',
+        'valkey/valkey',
+        'docker.io/valkey/valkey',
+      ],
+      automerge: false,
+      labels: [
+        'dependencies',
+        'database',
+        'needs-review',
+      ],
+    },
+    {
+      description: "Never auto-merge images tracking 'latest', where upstream major releases arrive as digest updates",
+      matchDatasources: [
+        'docker',
+      ],
+      matchCurrentValue: 'latest',
+      automerge: false,
+      labels: [
+        'dependencies',
+        'needs-review',
+      ],
+    },
   ],
-  "prConcurrentLimit": 20,
-  "prHourlyLimit": 0
+  prConcurrentLimit: 20,
+  prHourlyLimit: 0,
 }
