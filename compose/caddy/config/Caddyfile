@@ -184,7 +184,15 @@ llm.mattdies.com {
 homeassistant.mattdies.com {
 	import cloudflare_dns
 	import log_for_app "homeassistant"
-	import local_network_only
+
+	@external {
+		not path /api/google_assistant /auth/token /auth/authorize
+		not remote_ip 10.144.88.0/24 172.19.0.0/16
+	}
+	respond @external 403 {
+		close
+	}
+
 	reverse_proxy homeassistant:8123
 }
 
