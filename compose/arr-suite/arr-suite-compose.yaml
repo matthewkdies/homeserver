@@ -542,7 +542,7 @@ services:
       - CELERY_BROKER_URL=redis://localhost:6379/0
       - DISPATCHARR_LOG_LEVEL=info
       - DISPATCHARR_PORT=9191
-      - DISPATCHARR_TRUSTED_PROXIES=172.19.0.0/16
+      - DISPATCHARR_TRUSTED_PROXIES=172.19.0.3/32
     volumes:
       - dispatcharr_data:/data
       - ./dispatcharr/patches/generator.py:/app/apps/proxy/live_proxy/output/ts/generator.py:ro
