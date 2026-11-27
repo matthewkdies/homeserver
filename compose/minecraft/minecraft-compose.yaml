@@ -12,7 +12,7 @@
 
 services:
   spigotserver:
-    image: itzg/minecraft-server:java25@sha256:fc3cd4bcd3456d9878c11d0313d72c3a01f2c61b043127878ee5cfa517464840
+    image: itzg/minecraft-server:java25@sha256:11a4faa1439bc782c062e7bb882d2c8ce89ae7b5dbdd503bbfad82ac16d976c0
     container_name: minecraft
     hostname: minecraft
     environment:
